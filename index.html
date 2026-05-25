@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <meta name="theme-color" content="#0f0a1e"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Cal Quest"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <title>Calorie Quest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;overflow:hidden;}
+    body{font-family:'Rajdhani',sans-serif;font-weight:600;background:#0f0a1e;color:#f3e8ff;}
+    #app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:480px;margin:0 auto;}
+    #app-content{position:relative;z-index:1;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
+    .screen{display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
+    .screen.active{display:flex;}
+    .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+    ::-webkit-scrollbar{width:3px;}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);}
+    #bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+    #app-content{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;}
+    .btn{cursor:pointer;border:none;font-family:'Rajdhani',sans-serif;font-weight:700;transition:transform 0.08s,filter 0.1s;user-select:none;letter-spacing:1px;}
+    .btn:active{transform:scale(0.93);filter:brightness(0.75);}
+    input{font-family:'Rajdhani',sans-serif;font-weight:600;outline:none;border-radius:0;background:#0a0a1f;color:#e0e0e0;border:3px solid #1e1e3a;padding:14px;font-size:16px;width:100%;}
+    input:focus{border-color:#00ff9d;box-shadow:0 0 10px rgba(0,255,157,0.2);}
+    input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+    .panel{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+    #toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-60px);padding:14px 24px;font-size:16px;font-weight:700;letter-spacing:1px;border:3px solid;z-index:1000;white-space:nowrap;transition:transform 0.3s ease;pointer-events:none;backdrop-filter:blur(8px);}
+    #toast.show{transform:translateX(-50%) translateY(0);}
+    .hp-seg{flex:1;height:100%;border:2px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.4);transition:all 0.4s;}
+    /* Bottom nav */
+    #bottom-nav{flex-shrink:0;display:flex;border-top:3px solid;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:10;background:#0a0a1fee;border-color:#1e1e3a;}
+    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px 16px;gap:5px;cursor:pointer;border:none;background:transparent;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;transition:all 0.15s;color:#444;-webkit-tap-highlight-color:transparent;}
+    .nav-btn:active{transform:scale(0.92);}
+    .nav-btn .nav-icon{font-size:26px;line-height:1;transition:transform 0.15s;}
+    .nav-btn.active .nav-icon{transform:scale(1.15);}
+    .nav-btn .nav-dot{width:5px;height:5px;border-radius:50%;margin-top:2px;background:transparent;transition:all 0.2s;}
+    .nav-btn.active .nav-dot{background:currentColor;box-shadow:0 0 6px currentColor;}
+    /* Add screen type toggle */
+    .type-toggle{display:flex;gap:0;border:3px solid;overflow:hidden;flex-shrink:0;}
+    .type-toggle .tog-btn{flex:1;padding:18px 10px;font-size:16px;font-weight:700;font-family:'Rajdhani',sans-serif;border:none;cursor:pointer;transition:all 0.15s;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .type-toggle .tog-btn .tog-icon{font-size:28px;}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes twinkle{0%,100%{opacity:0.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+    @keyframes cloudDrift{0%{transform:translateX(-120px)}100%{transform:translateX(110vw)}}
+    @keyframes moonGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
+    @keyframes starFall{0%{transform:translateY(-10px);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(100vh);opacity:0}}
+    @keyframes nebulaPulse{0%,100%{opacity:0.3}50%{opacity:0.6}}
+    @keyframes bubble{0%{transform:translateY(0) scale(1);opacity:0.6}100%{transform:translateY(-100vh) scale(1.5);opacity:0}}
+    @keyframes wave{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    @keyframes sway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+    @keyframes lightRay{0%,100%{opacity:0.05}50%{opacity:0.15}}
+    @keyframes fishSwim{0%{transform:translateX(110vw) scaleX(1)}49%{transform:translateX(-20vw) scaleX(1)}50%{transform:translateX(-20vw) scaleX(-1)}100%{transform:translateX(110vw) scaleX(-1)}}
+    @keyframes flicker{0%,100%{opacity:0.8;transform:scaleX(1)}25%{opacity:1;transform:scaleX(1.05)}75%{opacity:0.7;transform:scaleX(0.95)}}
+    @keyframes ember{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-120px);opacity:0}}
+    @keyframes snowFall{0%{transform:translateY(-10px)}100%{transform:translateY(100vh) translateX(30px)}}
+    .hero-wrap{animation:float 3.5s ease-in-out infinite;}
+  </style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="app">
+  <div id="toast"></div>
+  <div id="app-content">
+
+    <!-- MAIN -->
+    <div id="screen-main" class="screen active">
+      <div id="main-header" class="panel" style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid;flex-shrink:0;">
+        <div id="main-title" style="font-size:22px;font-weight:700;letter-spacing:2px;"></div>
+        <div style="display:flex;gap:14px;align-items:center;">
+          <div id="streak-display" style="text-align:center;display:none;">
+            <div style="font-size:24px;line-height:1;">🔥</div>
+            <div id="streak-num" style="font-size:14px;color:#f97316;margin-top:2px;"></div>
+          </div>
+          <button class="btn" id="btn-settings" onclick="navTo('settings')" style="width:52px;height:52px;font-size:22px;display:flex;align-items:center;justify-content:center;border:3px solid;background:transparent;">⚙</button>
+        </div>
+      </div>
+      <div class="scroll">
+        <div id="hero-panel" class="panel" style="margin:12px 12px 0;padding:18px;display:flex;gap:18px;align-items:flex-start;border:3px solid;border-radius:4px;">
+          <div style="width:130px;height:170px;flex-shrink:0;position:relative;" class="hero-wrap">
+            <div id="hero-glow" style="position:absolute;inset:0;"></div>
+            <svg id="hero-svg" viewBox="0 0 80 120" width="100%" height="100%"></svg>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:16px;padding-top:4px;">
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span id="hp-label" style="font-size:17px;font-weight:700;"></span>
+                <span id="hp-value" style="font-size:17px;font-weight:700;"></span>
+              </div>
+              <div id="hp-bar" style="display:flex;gap:3px;height:30px;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div id="stat-food" style="padding:12px 8px;text-align:center;border:3px solid;border-radius:2px;">
+                <div id="stat-food-label" style="font-size:13px;margin-bottom:8px;"></div>
+                <div id="stat-food-val" style="font-size:22px;font-weight:700;"></div>
+              </div>
+              <div id="stat-ex" style="padding:12px 8px;text-align:center;border:3px solid;border-radius:2px;">
+                <div id="stat-ex-label" style="font-size:13px;margin-bottom:8px;"></div>
+                <div id="stat-ex-val" style="font-size:22px;font-weight:700;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="remaining-panel" class="panel" style="margin:12px 12px 0;padding:22px 16px;text-align:center;border:3px solid;border-radius:4px;">
+          <div style="font-size:16px;letter-spacing:2px;margin-bottom:10px;opacity:0.5;">GJENSTÅENDE</div>
+          <div id="remaining-val" style="font-size:64px;line-height:1;font-weight:700;transition:color 0.3s;"></div>
+          <div id="budget-label" style="font-size:15px;margin-top:10px;opacity:0.4;letter-spacing:1px;"></div>
+        </div>
+        <div id="quests-panel" class="panel" style="margin:12px 12px 0;padding:18px;border:3px solid;border-radius:4px;">
+          <div style="font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:16px;">📜 QUESTS</div>
+          <div id="quests-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div style="height:16px;"></div>
+      </div>
+    </div>
+
+    <!-- ADD -->
+    <div id="screen-add" class="screen">
+      <div id="add-header" class="panel" style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid;flex-shrink:0;">
+        <div id="add-screen-title" style="font-size:20px;font-weight:700;letter-spacing:1px;"></div>
+      </div>
+      <!-- Type toggle -->
+      <div style="padding:14px 14px 0;flex-shrink:0;">
+        <div class="type-toggle" id="type-toggle" style="border-color:#1e1e3a;">
+          <button class="tog-btn" id="tog-food" onclick="switchAddType('food')">
+            <span class="tog-icon">🍎</span>MAT
+          </button>
+          <button class="tog-btn" id="tog-ex" onclick="switchAddType('exercise')">
+            <span class="tog-icon">⚡</span>TRENING
+          </button>
+        </div>
+      </div>
+      <div class="scroll" style="padding:14px;display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div id="add-name-label" style="font-size:16px;letter-spacing:1px;margin-bottom:10px;opacity:0.5;"></div>
+          <input id="add-name" type="text" style="font-size:16px;padding:18px;"/>
+        </div>
+        <div>
+          <div style="font-size:16px;letter-spacing:1px;margin-bottom:10px;opacity:0.5;">KALORIER (KCAL)</div>
+          <input id="add-cal" type="text" inputmode="numeric" placeholder="0" style="font-size:48px;text-align:center;padding:20px 12px;letter-spacing:2px;font-weight:700;"/>
+        </div>
+        <div id="ai-panel" class="panel" style="padding:16px;border:3px solid;border-radius:2px;">
+          <div style="font-size:16px;font-weight:700;margin-bottom:12px;letter-spacing:1px;">🤖 FYLL INN MED AI</div>
+          <div id="img-preview-wrap" style="display:none;position:relative;margin-bottom:12px;">
+            <img id="img-preview" style="width:100%;max-height:160px;object-fit:cover;border:3px solid #1e1e3a;display:block;"/>
+            <button class="btn" id="btn-remove-img" style="position:absolute;top:8px;right:8px;width:38px;height:38px;background:#0a0a1f;border:3px solid #ef4444;color:#ef4444;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn" id="btn-pick-img" style="flex:1;padding:18px;font-size:14px;background:#0a0a1f;border:3px dashed #1e1e3a;color:#666;">📷 BILDE</button>
+            <input id="file-input" type="file" accept="image/*" style="display:none;width:auto;border:none;padding:0;background:none;"/>
+            <button class="btn" id="btn-analyze" style="flex:2;padding:18px;font-size:15px;border:3px solid;opacity:0.4;">🤖 ANALYSER</button>
+          </div>
+          <div style="font-size:13px;margin-top:10px;opacity:0.4;letter-spacing:1px;">Skriv navn og/eller last opp bilde — AI fyller inn kalorier</div>
+        </div>
+      </div>
+      <div style="padding:14px;border-top:3px solid #1a1a3a;flex-shrink:0;">
+        <button class="btn" id="btn-add-confirm" style="width:100%;padding:24px;font-size:18px;border:3px solid;border-radius:2px;opacity:0.3;cursor:not-allowed;">✓ LEGG TIL</button>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div id="screen-log" class="screen">
+      <div id="log-header" class="panel" style="padding:18px 20px;display:flex;align-items:center;border-bottom:3px solid;flex-shrink:0;">
+        <div id="log-title" style="font-size:22px;font-weight:700;letter-spacing:1px;"></div>
+      </div>
+      <div class="scroll" style="padding:14px;">
+        <div id="log-empty" style="display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;height:300px;">
+          <div style="font-size:54px;opacity:0.15;">📜</div>
+          <div style="font-size:16px;letter-spacing:1px;opacity:0.3;">INGEN OPPFØRINGER</div>
+        </div>
+        <div id="log-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="screen-settings" class="screen">
+      <div id="settings-header" class="panel" style="padding:18px 20px;display:flex;align-items:center;border-bottom:3px solid;flex-shrink:0;">
+        <div id="settings-title" style="font-size:22px;font-weight:700;letter-spacing:1px;"></div>
+      </div>
+      <div class="scroll" style="padding:14px;display:flex;flex-direction:column;gap:16px;">
+        <div id="budget-card" class="panel" style="padding:20px;border:3px solid;">
+          <div style="font-size:16px;letter-spacing:1px;margin-bottom:14px;opacity:0.5;">DAGLIG KALORIBUDSJETT</div>
+          <input id="settings-budget" type="text" inputmode="numeric" style="font-size:28px;text-align:center;padding:16px;letter-spacing:2px;font-weight:700;border-color:rgba(255,215,0,0.4);color:#ffd700;"/>
+          <div style="font-size:14px;margin-top:10px;text-align:center;opacity:0.3;letter-spacing:1px;">KCAL PER DAG</div>
+        </div>
+        <div id="api-card" class="panel" style="padding:20px;border:3px solid;">
+          <div style="font-size:16px;letter-spacing:1px;margin-bottom:16px;opacity:0.5;">🤖 AI-LEVERANDØR</div>
+          <!-- Provider toggle -->
+          <div style="display:flex;gap:10px;margin-bottom:20px;">
+            <button class="btn" id="btn-provider-claude" onclick="setProvider('claude')" style="flex:1;padding:16px 8px;font-size:14px;border:3px solid #a855f7;background:rgba(168,85,247,0.15);color:#c4b5fd;">
+              <div style="font-size:22px;margin-bottom:6px;">🧠</div>Claude
+            </button>
+            <button class="btn" id="btn-provider-gemini" onclick="setProvider('gemini')" style="flex:1;padding:16px 8px;font-size:14px;border:3px solid #333;background:transparent;color:#666;">
+              <div style="font-size:22px;margin-bottom:6px;">✨</div>Gemini
+            </button>
+          </div>
+          <!-- Claude key -->
+          <div id="claude-key-wrap">
+            <div style="font-size:14px;letter-spacing:1px;margin-bottom:8px;opacity:0.5;">ANTHROPIC API-NØKKEL</div>
+            <input id="settings-api" type="password" placeholder="sk-ant-..." style="font-size:14px;padding:14px;margin-bottom:8px;"/>
+            <div style="font-size:12px;opacity:0.35;line-height:1.6;">Hent nøkkel på console.anthropic.com</div>
+          </div>
+          <!-- Gemini key -->
+          <div id="gemini-key-wrap" style="display:none;">
+            <div style="font-size:14px;letter-spacing:1px;margin-bottom:8px;opacity:0.5;">GOOGLE GEMINI API-NØKKEL</div>
+            <input id="settings-gemini" type="password" placeholder="AIza..." style="font-size:14px;padding:14px;margin-bottom:8px;"/>
+            <div style="font-size:12px;opacity:0.35;line-height:1.6;">Hent nøkkel på aistudio.google.com</div>
+          </div>
+          <div style="font-size:12px;margin-top:12px;opacity:0.35;line-height:1.6;">Nøkler lagres kun lokalt på denne enheten.</div>
+        </div>
+        <div id="theme-card" class="panel" style="padding:20px;border:3px solid;">
+          <div style="font-size:16px;letter-spacing:1px;margin-bottom:16px;opacity:0.5;">🎨 VELG TEMA</div>
+          <div id="theme-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <div id="streak-card" class="panel" style="padding:20px;border:3px solid;display:none;">
+          <div style="font-size:16px;letter-spacing:1px;margin-bottom:10px;opacity:0.5;">STREAK</div>
+          <div id="streak-info" style="font-size:20px;color:#f97316;font-weight:700;"></div>
+        </div>
+      </div>
+      <div style="padding:16px;border-top:3px solid #1a1a3a;flex-shrink:0;">
+        <button class="btn" id="btn-save-settings" style="width:100%;padding:24px;font-size:18px;color:#060612;background:#ffd700;border:3px solid #ffd700;box-shadow:0 0 24px rgba(255,215,0,0.5);letter-spacing:2px;">LAGRE</button>
+      </div>
+    </div>
+
+  </div><!-- /app-content -->
+
+  <!-- BOTTOM NAV -->
+  <div id="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="navTo('main')">
+      <span class="nav-icon">🏠</span>
+      <span>HOME</span>
+      <span class="nav-dot"></span>
+    </button>
+    <button class="nav-btn" id="nav-add" onclick="navTo('add')">
+      <span class="nav-icon">✚</span>
+      <span>LEGG TIL</span>
+      <span class="nav-dot"></span>
+    </button>
+    <button class="nav-btn" id="nav-log" onclick="navTo('log')">
+      <span class="nav-icon">📋</span>
+      <span id="nav-log-label">LOGG</span>
+      <span class="nav-dot"></span>
+    </button>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+const TODAY = new Date().toISOString().split("T")[0];
+let state = { themeId:"fantasy", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null };
+
+const THEMES = {
+  fantasy:{id:"fantasy",name:"Fantasy Kingdom",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#0f0a1e",panel:"#1a1030dd",border:"#4c1d95",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
+  space:{id:"space",name:"Space RPG",emoji:"🚀",primary:"#00cfff",secondary:"#a855f7",accent:"#00ff9d",danger:"#ff4d6d",bg:"#020612",panel:"#080f1edd",border:"#0e3a6e",text:"#e0f0ff",subtext:"#5b9cf6",hpColor:p=>p>50?"#00cfff":p>20?"#a855f7":"#ff4d6d",hpLabel:"⚡ ENERGY",foodLabel:"🍱 INTAKE",exLabel:"🔥 OUTPUT",btnFood:{bg:"linear-gradient(135deg,#020f1f,#0a2545)",border:"#1d4ed8",color:"#93c5fd"},btnEx:{bg:"linear-gradient(135deg,#0f0020,#1e0050)",border:"#7c3aed",color:"#c4b5fd"},btnLog:{bg:"linear-gradient(135deg,#001a0d,#003d1f)",border:"#065f46",color:"#6ee7b7"}},
+  ocean:{id:"ocean",name:"Ocean Adventure",emoji:"🌊",primary:"#06b6d4",secondary:"#0ea5e9",accent:"#f59e0b",danger:"#f43f5e",bg:"#041c2c",panel:"#062436dd",border:"#0e4f6e",text:"#e0f8ff",subtext:"#38bcd4",hpColor:p=>p>50?"#06b6d4":p>20?"#f59e0b":"#f43f5e",hpLabel:"💧 HP",foodLabel:"🐟 SPIST",exLabel:"🌊 BRENT",btnFood:{bg:"linear-gradient(135deg,#042030,#073a55)",border:"#0e7490",color:"#67e8f9"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#d97706",color:"#fcd34d"},btnLog:{bg:"linear-gradient(135deg,#0a1a00,#183000)",border:"#15803d",color:"#86efac"}},
+  viking:{id:"viking",name:"Viking Norse",emoji:"🌋",primary:"#f97316",secondary:"#dc2626",accent:"#fbbf24",danger:"#dc2626",bg:"#1a0a00",panel:"#2a1200dd",border:"#7c2d12",text:"#fef3c7",subtext:"#d4720a",hpColor:p=>p>50?"#f97316":p>20?"#fbbf24":"#dc2626",hpLabel:"🍺 MEAD",foodLabel:"🥩 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1a0800,#3d1800)",border:"#c2410c",color:"#fdba74"},btnEx:{bg:"linear-gradient(135deg,#1a0000,#3d0000)",border:"#991b1b",color:"#fca5a5"},btnLog:{bg:"linear-gradient(135deg,#1a1000,#3a2500)",border:"#a16207",color:"#fde68a"}}
+};
+
+const QUESTS = [
+  {id:"log3",icon:"🍽",label:"Log 3 måltider",check:log=>log.filter(e=>e.type==="food").length>=3},
+  {id:"train",icon:"⚡",label:"Tren én gang",check:log=>log.some(e=>e.type==="exercise")},
+  {id:"budget",icon:"🛡",label:"Hold budsjettet",check:(log,rem)=>rem>=0}
+];
+
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+function load(k,d){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}}
+function el(id){return document.getElementById(id)}
+function getUsed(){return state.log.filter(e=>e.type==="food").reduce((s,e)=>s+e.calories,0)}
+function getBurned(){return state.log.filter(e=>e.type==="exercise").reduce((s,e)=>s+e.calories,0)}
+function getRemaining(){return state.budget-getUsed()+getBurned()}
+
+function loadAll(){
+  state.themeId=load("cq_theme","fantasy");
+  state.budget=load("cq_budget",2000);
+  state.apiKey=load("cq_apikey","");
+  state.geminiKey=load("cq_geminikey","");
+  state.provider=load("cq_provider","claude");
+  state.streak=load("cq_streak",0);
+  const day=load("cq_day",null);
+  state.log=(day&&day.date===TODAY)?day.log:[];
+}
+function saveDay(){save("cq_day",{date:TODAY,log:state.log})}
+
+function buildFantasyBg(){
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#0f0a1e 0%,#1a0a3e 40%,#0d0520 100%);"></div>`;
+  h+=`<div style="position:absolute;top:30px;right:40px;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,#fffde0 60%,#ffd700 100%);box-shadow:0 0 30px #ffd70080;animation:moonGlow 4s ease-in-out infinite;"></div>`;
+  for(let i=0;i<40;i++) h+=`<div style="position:absolute;left:${(i*37+13)%100}%;top:${(i*23+7)%70}%;width:${i%5===0?3:2}px;height:${i%5===0?3:2}px;border-radius:50%;background:#fff;animation:twinkle ${1.5+i%3}s ${i*0.2}s ease-in-out infinite;"></div>`;
+  for(let i=0;i<3;i++) h+=`<div style="position:absolute;top:${20+i*15}%;width:${80+i*20}px;height:${20+i*8}px;border-radius:20px;background:rgba(100,60,180,0.15);animation:cloudDrift ${18+i*7}s ${i*5}s linear infinite;"></div>`;
+  h+=`<svg style="position:absolute;bottom:0;left:0;right:0;width:100%;height:100px;" viewBox="0 0 400 100" preserveAspectRatio="none"><path d="M0 100 L0 60 L20 60 L20 40 L30 40 L30 60 L60 60 L60 30 L70 30 L70 10 L80 10 L80 30 L90 30 L90 60 L120 60 L120 40 L130 40 L130 60 L160 60 L160 100 Z" fill="#0d0520" opacity="0.9"/><path d="M240 100 L240 70 L260 70 L260 50 L270 50 L270 30 L280 30 L280 50 L290 50 L290 70 L320 70 L320 55 L330 55 L330 70 L400 70 L400 100 Z" fill="#0d0520" opacity="0.8"/></svg>`;
+  return h;
+}
+function buildSpaceBg(){
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#020612,#030a1a,#020810);"></div>`;
+  h+=`<div style="position:absolute;top:10%;left:10%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.15),transparent 70%);animation:nebulaPulse 6s ease-in-out infinite;"></div>`;
+  h+=`<div style="position:absolute;top:30%;right:5%;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(0,207,255,0.1),transparent 70%);animation:nebulaPulse 8s 2s ease-in-out infinite;"></div>`;
+  h+=`<div style="position:absolute;top:20px;left:30px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#1d4ed8,#0a0a3a);box-shadow:0 0 20px rgba(29,78,216,0.5);"><div style="position:absolute;top:40%;left:-10px;right:-10px;height:8px;border-radius:50%;border:3px solid rgba(0,207,255,0.4);transform:rotate(-15deg);"></div></div>`;
+  for(let i=0;i<50;i++) h+=`<div style="position:absolute;left:${(i*41+7)%100}%;width:2px;height:${i%8===0?12:2}px;background:${i%8===0?"rgba(255,255,255,0.6)":"#fff"};animation:starFall ${8+i%6}s ${i*0.3}s linear infinite;opacity:${0.7+(i%3)*0.1};"></div>`;
+  h+=`<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,207,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,207,255,0.03) 1px,transparent 1px);background-size:40px 40px;"></div>`;
+  return h;
+}
+function buildOceanBg(){
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#041c2c,#062436,#041a28,#020e18);"></div>`;
+  for(let i=0;i<4;i++) h+=`<div style="position:absolute;top:0;left:${15+i*22}%;width:${30+i*10}px;height:60%;background:linear-gradient(180deg,rgba(6,182,212,0.2),transparent);transform:rotate(${-10+i*7}deg);transform-origin:top center;animation:lightRay ${3+i}s ${i*0.5}s ease-in-out infinite;"></div>`;
+  for(let i=0;i<18;i++) h+=`<div style="position:absolute;bottom:${-10-i*5}%;left:${(i*19+5)%95}%;width:${6+i%4*4}px;height:${6+i%4*4}px;border-radius:50%;border:1.5px solid rgba(6,182,212,0.5);animation:bubble ${6+i%5*2}s ${i*0.8}s linear infinite;"></div>`;
+  for(let i=0;i<5;i++) h+=`<div style="position:absolute;bottom:0;left:${5+i*22}%;width:12px;height:${50+i%3*20}px;background:linear-gradient(180deg,rgba(5,150,105,0),rgba(5,150,105,0.7));border-radius:50% 50% 0 0;transform-origin:bottom center;animation:sway ${2.5+i*0.4}s ${i*0.3}s ease-in-out infinite;"></div>`;
+  h+=`<div style="position:absolute;top:0;left:0;right:0;height:20px;overflow:hidden;"><div style="display:flex;animation:wave 6s linear infinite;width:200%;"><svg viewBox="0 0 400 20" width="50%" height="20" preserveAspectRatio="none"><path d="M0 10 Q50 0 100 10 Q150 20 200 10 Q250 0 300 10 Q350 20 400 10 L400 0 L0 0Z" fill="rgba(6,182,212,0.3)"/></svg><svg viewBox="0 0 400 20" width="50%" height="20" preserveAspectRatio="none"><path d="M0 10 Q50 0 100 10 Q150 20 200 10 Q250 0 300 10 Q350 20 400 10 L400 0 L0 0Z" fill="rgba(6,182,212,0.3)"/></svg></div></div>`;
+  h+=`<div style="position:absolute;top:35%;font-size:24px;animation:fishSwim 20s linear infinite;opacity:0.3;">🐠</div>`;
+  h+=`<div style="position:absolute;top:55%;font-size:18px;animation:fishSwim 30s 10s linear infinite;opacity:0.25;">🐟</div>`;
+  return h;
+}
+function buildVikingBg(){
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#0d0500,#1a0a00,#0a0500);"></div>`;
+  h+=`<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(80,40,0,0.08) 0px,rgba(80,40,0,0.08) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,rgba(80,40,0,0.08) 0px,rgba(80,40,0,0.08) 1px,transparent 1px,transparent 60px);"></div>`;
+  for(let i=0;i<3;i++){h+=`<div style="position:absolute;bottom:0;left:${2+i*4}%;width:18px;height:${60+i*20}px;background:linear-gradient(180deg,transparent,rgba(249,115,22,0.${4+i}),rgba(220,38,38,0.6));border-radius:50% 50% 0 0;animation:flicker ${0.8+i*0.3}s ${i*0.2}s ease-in-out infinite;transform-origin:bottom center;"></div>`;h+=`<div style="position:absolute;bottom:0;right:${2+i*4}%;width:18px;height:${60+i*20}px;background:linear-gradient(180deg,transparent,rgba(249,115,22,0.${4+i}),rgba(220,38,38,0.6));border-radius:50% 50% 0 0;animation:flicker ${0.9+i*0.25}s ${i*0.15+0.1}s ease-in-out infinite;transform-origin:bottom center;"></div>`;}
+  for(let i=0;i<20;i++) h+=`<div style="position:absolute;bottom:${i*3}%;left:${(i*17+3)%95}%;width:3px;height:3px;border-radius:50%;background:${i%2?"#f97316":"#fbbf24"};animation:ember ${2+i%3}s ${i*0.4}s ease-out infinite;opacity:0;"></div>`;
+  for(let i=0;i<15;i++) h+=`<div style="position:absolute;left:${(i*23+5)%100}%;top:-10px;color:rgba(255,255,255,0.4);font-size:${10+i%3*4}px;animation:snowFall ${8+i%4*3}s ${i*0.6}s linear infinite;">❄</div>`;
+  h+=`<div style="position:absolute;top:15%;left:12px;font-size:28px;color:rgba(251,191,36,0.12);font-family:serif;">ᚱ</div><div style="position:absolute;top:40%;right:12px;font-size:28px;color:rgba(251,191,36,0.12);font-family:serif;">ᚦ</div>`;
+  return h;
+}
+
+function heroSVG(mood,th){
+  const c=mood==="sad"?th.danger:mood==="neutral"?th.accent:th.primary;
+  const eyes=mood==="sad"?`<rect x="28" y="27" width="8" height="6" fill="#000" rx="1"/><rect x="44" y="27" width="8" height="6" fill="#000" rx="1"/><path d="M28 38 Q40 33 52 38" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>`:mood==="happy"?`<rect x="28" y="26" width="8" height="8" fill="#000" rx="1"/><rect x="44" y="26" width="8" height="8" fill="#000" rx="1"/><path d="M28 38 Q40 46 52 38" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>`:(`<rect x="28" y="27" width="8" height="6" fill="#000" rx="1"/><rect x="44" y="27" width="8" height="6" fill="#000" rx="1"/><line x1="28" y1="39" x2="52" y2="39" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>`);
+  return `<ellipse cx="40" cy="116" rx="20" ry="4" fill="#000" opacity="0.5"/><rect x="25" y="86" width="12" height="24" fill="${c}" opacity="0.9" rx="2"/><rect x="43" y="86" width="12" height="24" fill="${c}" opacity="0.9" rx="2"/><rect x="22" y="104" width="16" height="12" fill="${c}" rx="2"/><rect x="42" y="104" width="16" height="12" fill="${c}" rx="2"/><rect x="20" y="54" width="40" height="36" fill="${c}" opacity="0.95" rx="3"/><rect x="26" y="60" width="28" height="5" fill="rgba(0,0,0,0.3)" rx="1"/><rect x="35" y="67" width="10" height="18" fill="rgba(0,0,0,0.2)" rx="1"/><rect x="5" y="56" width="15" height="30" fill="${c}" opacity="0.85" rx="3"/><rect x="60" y="56" width="15" height="30" fill="${c}" opacity="0.85" rx="3"/><rect x="74" y="38" width="5" height="34" fill="rgba(255,255,255,0.7)" rx="1"/><rect x="69" y="62" width="14" height="5" fill="rgba(255,255,255,0.4)" rx="1"/><rect x="1" y="58" width="12" height="18" fill="${c}" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" rx="2"/><rect x="34" y="46" width="12" height="10" fill="${c}" rx="1"/><rect x="22" y="16" width="36" height="34" fill="${c}" opacity="0.95" rx="4"/><rect x="20" y="12" width="40" height="9" fill="${c}" rx="2"/><rect x="28" y="5" width="24" height="11" fill="${c}" rx="2"/><rect x="34" y="0" width="12" height="9" fill="${c}" rx="1"/>${eyes}`;
+}
+
+let toastTimer=null;
+function showToast(msg,color){
+  const th=THEMES[state.themeId];color=color||th.primary;
+  const t=el("toast");t.textContent=msg;t.style.background=th.panel;t.style.borderColor=color;t.style.color=color;t.style.boxShadow=`0 0 24px ${color}50`;t.classList.add("show");
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2500);
+}
+
+function applyTheme(th){
+  document.body.style.background=th.bg;document.body.style.color=th.text;
+  const bgs={fantasy:buildFantasyBg,space:buildSpaceBg,ocean:buildOceanBg,viking:buildVikingBg};
+  el("bg").innerHTML=bgs[th.id]();
+  el("main-header").style.cssText+=`;background:${th.panel};border-color:${th.border};`;
+  el("main-title").textContent=`${th.emoji} CALORIE QUEST`;el("main-title").style.color=th.primary;el("main-title").style.textShadow=`0 0 14px ${th.primary}70`;
+  el("btn-settings").style.borderColor=th.border;el("btn-settings").style.color=th.subtext;
+  el("hero-panel").style.background=th.panel;el("hero-panel").style.borderColor=th.border;
+  el("stat-food").style.background=th.panel;el("stat-food").style.borderColor=th.border;el("stat-food-label").style.color=th.subtext;el("stat-food-label").textContent=th.foodLabel;
+  el("stat-ex").style.background=th.panel;el("stat-ex").style.borderColor=th.border;el("stat-ex-label").style.color=th.subtext;el("stat-ex-label").textContent=th.exLabel;
+  el("remaining-panel").style.background=th.panel;el("remaining-panel").style.borderColor=th.border;
+  el("quests-panel").style.background=th.panel;el("quests-panel").style.borderColor=th.border;el("quests-panel").querySelector("div").style.color=th.primary;
+  el("add-header").style.background=th.panel;
+  el("log-header").style.background=th.panel;el("log-header").style.borderColor=th.border;el("log-title").style.color=th.primary;el("log-title").textContent="📋 DAGENS LOGG";
+  el("settings-header").style.background=th.panel;el("settings-header").style.borderColor=th.border;el("settings-title").style.color=th.primary;el("settings-title").textContent="⚙ INNSTILLINGER";
+  // Bottom nav
+  const nav=el("bottom-nav");nav.style.background=th.panel;nav.style.borderColor=th.border;
+  document.querySelectorAll(".nav-btn").forEach(b=>{b.style.color="#444";});
+  const activeNav=el({main:"nav-home",add:"nav-add",log:"nav-log"}[state.screen]||"nav-home");
+  if(activeNav)activeNav.style.color=th.primary;
+  ["budget-card","api-card","theme-card","streak-card"].forEach(id=>{const c=el(id);if(c){c.style.background=th.panel;c.style.borderColor=th.border;}});
+  el("ai-panel").style.background=th.panel;el("ai-panel").style.borderColor=th.secondary+"60";el("ai-panel").querySelector("div").style.color=th.secondary;
+  el("btn-analyze").style.borderColor=th.secondary;el("btn-analyze").style.color=th.secondary;el("btn-analyze").style.background=th.secondary+"22";
+}
+
+function renderMain(){
+  const th=THEMES[state.themeId],used=getUsed(),burned=getBurned(),remaining=getRemaining();
+  const pct=Math.max(0,Math.min(100,(remaining/state.budget)*100));
+  const hpColor=th.hpColor(pct);
+  const mood=remaining>state.budget*0.5?"happy":remaining>0?"neutral":"sad";
+  el("hero-svg").innerHTML=heroSVG(mood,th);
+  el("hero-svg").style.filter=`drop-shadow(0 0 10px ${th.primary}) drop-shadow(0 0 20px ${th.primary}60)`;
+  el("hero-glow").style.background=`radial-gradient(ellipse at center 80%,${hpColor}18,transparent 70%)`;
+  el("hp-label").textContent=th.hpLabel;el("hp-label").style.color=th.subtext;
+  el("hp-value").textContent=`${Math.max(0,remaining)} kcal`;el("hp-value").style.color=hpColor;
+  const bar=el("hp-bar");bar.innerHTML="";
+  for(let i=0;i<14;i++){const d=document.createElement("div");d.className="hp-seg";const filled=(i/14)*100<pct;if(filled){d.style.background=hpColor;d.style.borderColor=hpColor;d.style.boxShadow=`0 0 8px ${hpColor}60`;}bar.appendChild(d);}
+  el("stat-food-val").textContent=used;el("stat-food-val").style.color=th.danger;el("stat-food-val").style.textShadow=`0 0 10px ${th.danger}80`;
+  el("stat-ex-val").textContent=burned;el("stat-ex-val").style.color=th.accent;el("stat-ex-val").style.textShadow=`0 0 10px ${th.accent}80`;
+  el("remaining-val").textContent=remaining;el("remaining-val").style.color=hpColor;el("remaining-val").style.textShadow=`0 0 28px ${hpColor}`;el("remaining-val").style.animation=remaining<0?"pulse 1s infinite":"none";el("remaining-val").style.fontSize=Math.abs(remaining)>9999?"44px":"64px";
+  el("budget-label").textContent=`AV ${state.budget} KCAL`;
+  el("remaining-panel").style.background=remaining<0?`linear-gradient(135deg,${th.danger}15,${th.panel})`:th.panel;
+  const ql=el("quests-list");ql.innerHTML="";
+  QUESTS.forEach(q=>{const done=q.check(state.log,remaining);const d=document.createElement("div");d.style.cssText=`display:flex;align-items:center;gap:14px;padding:14px 16px;border:3px solid ${done?th.accent+"60":th.border+"60"};background:${done?th.accent+"10":"rgba(0,0,0,0.3)"};`;d.innerHTML=`<div style="width:30px;height:30px;flex-shrink:0;border:3px solid ${done?th.accent:"rgba(255,255,255,0.1)"};background:${done?th.accent:"transparent"};display:flex;align-items:center;justify-content:center;font-size:14px;color:${th.bg};box-shadow:${done?`0 0 10px ${th.accent}`:""}">${done?"✓":""}</div><div style="flex:1;font-size:16px;color:${done?th.accent:th.subtext};">${q.icon} ${q.label}</div>`;ql.appendChild(d);});
+  const sd=el("streak-display");if(state.streak>0){sd.style.display="block";el("streak-num").textContent=state.streak;}else sd.style.display="none";
+  el("nav-log-label").textContent=`LOGG${state.log.length?` (${state.log.length})`:""}`;
+}
+
+function renderLog(){
+  const th=THEMES[state.themeId],list=el("log-list"),empty=el("log-empty");
+  list.innerHTML="";
+  if(!state.log.length){empty.style.display="flex";return;}
+  empty.style.display="none";
+  [...state.log].reverse().forEach(entry=>{
+    const btn=entry.type==="food"?th.btnFood:th.btnEx,calColor=entry.type==="food"?th.danger:th.accent,sign=entry.type==="food"?"−":"+",icon=entry.type==="food"?"🍎":"⚡";
+    const card=document.createElement("div");card.className="panel";
+    card.style.cssText=`display:flex;align-items:center;gap:14px;padding:16px 18px;background:${th.panel};border:3px solid ${btn.border}60;margin-bottom:0;`;
+    card.innerHTML=`<div style="width:48px;height:48px;flex-shrink:0;background:${btn.bg};border:3px solid ${btn.border};display:flex;align-items:center;justify-content:center;font-size:24px;">${icon}</div><div style="flex:1;"><div style="font-size:15px;margin-bottom:6px;line-height:1.5;color:${th.text};">${entry.name}</div><div style="font-size:18px;font-weight:700;color:${calColor};text-shadow:0 0 8px ${calColor}60;">${sign}${entry.calories} kcal</div></div><div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;"><button class="btn edit-btn" data-id="${entry.id}" style="width:44px;height:44px;font-size:18px;background:${th.panel};border:2px solid ${th.primary}60;color:${th.primary};display:flex;align-items:center;justify-content:center;">✏️</button><button class="btn del-btn" data-id="${entry.id}" style="width:44px;height:44px;font-size:18px;background:${th.panel};border:2px solid ${th.danger}60;color:${th.danger};display:flex;align-items:center;justify-content:center;">🗑</button></div>`;
+    list.appendChild(card);
+  });
+  list.querySelectorAll(".del-btn").forEach(b=>b.addEventListener("click",()=>{state.log=state.log.filter(e=>e.id!==parseInt(b.dataset.id));saveDay();renderLog();renderMain();}));
+  list.querySelectorAll(".edit-btn").forEach(b=>b.addEventListener("click",()=>{const entry=state.log.find(e=>e.id===parseInt(b.dataset.id));if(entry)openEditModal(entry);}));
+}
+
+function renderThemePicker(){
+  const th=THEMES[state.themeId],list=el("theme-list");list.innerHTML="";
+  Object.values(THEMES).forEach(t=>{
+    const active=t.id===state.themeId;
+    const btn=document.createElement("button");btn.className="btn";
+    btn.style.cssText=`padding:18px 16px;display:flex;align-items:center;gap:16px;background:${active?t.primary+"18":"rgba(0,0,0,0.3)"};border:3px solid ${active?t.primary:t.border};color:${active?t.primary:th.text};box-shadow:${active?`0 0 16px ${t.primary}40`:""};width:100%;text-align:left;`;
+    btn.innerHTML=`<div style="width:50px;height:50px;flex-shrink:0;background:${t.bg};border:2px solid ${t.border};display:flex;align-items:center;justify-content:center;font-size:26px;">${t.emoji}</div><div style="flex:1;"><div style="font-size:16px;color:${active?t.primary:th.text};margin-bottom:6px;font-weight:700;">${t.name}</div><div style="display:flex;gap:6px;">${[t.primary,t.secondary,t.accent,t.danger].map(c=>`<div style="width:14px;height:14px;border-radius:50%;background:${c};box-shadow:0 0 4px ${c};"></div>`).join("")}</div></div>${active?"<div style='font-size:18px;'>✓</div>":""}`;
+    btn.addEventListener("click",()=>{state.themeId=t.id;applyTheme(THEMES[t.id]);renderMain();renderThemePicker();renderLog();});
+    list.appendChild(btn);
+  });
+}
+
+function openEditModal(entry){
+  const th=THEMES[state.themeId];let modal=document.getElementById("edit-modal");if(modal)modal.remove();
+  modal=document.createElement("div");modal.id="edit-modal";
+  modal.style.cssText=`position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;`;
+  const calColor=entry.type==="food"?th.danger:th.accent;
+  modal.innerHTML=`<div style="background:${th.panel};border:3px solid ${th.primary};padding:24px;width:100%;max-width:440px;animation:slideUp 0.2s ease;backdrop-filter:blur(8px);"><div style="font-size:18px;color:${th.primary};margin-bottom:20px;font-weight:700;letter-spacing:1px;">✏️ REDIGER</div><div style="margin-bottom:14px;"><div style="font-size:14px;color:${th.subtext};margin-bottom:8px;letter-spacing:1px;">NAVN</div><input id="edit-name" type="text" value="${entry.name}" style="font-size:16px;padding:14px;background:${th.bg};border-color:${th.primary}60;color:${th.text};"/></div><div style="margin-bottom:20px;"><div style="font-size:14px;color:${th.subtext};margin-bottom:8px;letter-spacing:1px;">KALORIER (KCAL)</div><input id="edit-cal" type="text" inputmode="numeric" value="${entry.calories}" style="font-size:36px;text-align:center;padding:14px;background:${th.bg};border-color:${calColor}60;color:${calColor};font-weight:700;"/></div><div style="display:flex;gap:10px;"><button class="btn" id="edit-save" style="flex:2;padding:18px;font-size:16px;background:${th.primary}22;color:${th.primary};border:3px solid ${th.primary};letter-spacing:1px;">✓ LAGRE</button><button class="btn" id="edit-cancel" style="flex:1;padding:18px;font-size:16px;background:transparent;color:${th.subtext};border:3px solid ${th.border};letter-spacing:1px;">AVBRYT</button></div></div>`;
+  document.body.appendChild(modal);
+  const ec=document.getElementById("edit-cal");ec.addEventListener("focus",()=>ec.select());ec.addEventListener("input",()=>{ec.value=ec.value.replace(/[^0-9]/g,"");});
+  document.getElementById("edit-cancel").addEventListener("click",()=>modal.remove());
+  document.getElementById("edit-save").addEventListener("click",()=>{const n=document.getElementById("edit-name").value.trim(),c=parseInt(document.getElementById("edit-cal").value)||0;if(!n)return;state.log=state.log.map(e=>e.id===entry.id?{...e,name:n,calories:c}:e);saveDay();renderLog();renderMain();modal.remove();showToast("✓ LAGRET!");});
+  modal.addEventListener("click",e=>{if(e.target===modal)modal.remove();});
+}
+
+function navTo(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  el("screen-"+name).classList.add("active");
+  state.screen=name;
+  const map={main:"nav-home",add:"nav-add",log:"nav-log"};
+  document.querySelectorAll(".nav-btn").forEach(b=>{b.classList.remove("active");b.style.color="#444";});
+  const th=THEMES[state.themeId];
+  const active=el(map[name]);
+  if(active){active.classList.add("active");active.style.color=th.primary;}
+  el("nav-log-label").textContent=`LOGG${state.log.length?` (${state.log.length})`:""}`;
+  if(name==="log")renderLog();
+  if(name==="add")resetAddScreen();
+}
+
+function resetAddScreen(){
+  const th=THEMES[state.themeId];
+  el("add-screen-title").textContent="LEGG TIL";
+  el("add-screen-title").style.color=th.primary;
+  el("add-header").style.background=th.panel;
+  el("add-header").style.borderColor=th.border;
+  switchAddType(state.addType||"food");
+}
+
+function switchAddType(type){
+  state.addType=type;
+  const th=THEMES[state.themeId];
+  const foodActive=type==="food";
+  const fBtn=el("tog-food"),eBtn=el("tog-ex");
+  // Food button
+  fBtn.style.background=foodActive?th.btnFood.bg:"rgba(0,0,0,0.3)";
+  fBtn.style.color=foodActive?th.btnFood.color:"#444";
+  fBtn.style.borderRight=`2px solid ${th.border}`;
+  // Ex button
+  eBtn.style.background=!foodActive?th.btnEx.bg:"rgba(0,0,0,0.3)";
+  eBtn.style.color=!foodActive?th.btnEx.color:"#444";
+  // Toggle border
+  el("type-toggle").style.borderColor=foodActive?th.btnFood.border:th.btnEx.border;
+  // Update fields
+  el("add-name-label").textContent=foodActive?"MATVARE":"AKTIVITET";
+  el("add-name").placeholder=foodActive?"f.eks. Havregrøt med bær...":"f.eks. Løping 30 min...";
+  const accent=foodActive?th.btnFood:th.btnEx;
+  el("add-cal").style.color=foodActive?th.primary:th.secondary;
+  el("add-cal").style.borderColor=accent.border;
+  // Confirm button
+  updateAddConfirmBtn();
+}
+
+function updateAddConfirmBtn(){
+  const th=THEMES[state.themeId],type=state.addType,accent=type==="food"?th.btnFood:th.btnEx;
+  const ok=el("add-name").value.trim()&&el("add-cal").value;
+  const btn=el("btn-add-confirm");
+  btn.style.background=ok?accent.bg:"transparent";btn.style.color=ok?accent.color:th.subtext;btn.style.borderColor=ok?accent.border:th.border;btn.style.boxShadow=ok?`0 0 24px ${accent.border}60`:"none";btn.style.opacity=ok?"1":"0.3";btn.style.cursor=ok?"pointer":"not-allowed";
+  const canAnalyze=el("add-name").value||state.imageFile;el("btn-analyze").style.opacity=canAnalyze?"1":"0.4";
+}
+
+function setProvider(p){
+  state.provider=p;
+  const th=THEMES[state.themeId];
+  const active={border:"#a855f7",bg:"rgba(168,85,247,0.15)",color:"#c4b5fd"};
+  const inactive={border:"#333",bg:"transparent",color:"#666"};
+  const cp=el("btn-provider-claude"),gp=el("btn-provider-gemini");
+  if(p==="claude"){Object.assign(cp.style,{border:`3px solid ${active.border}`,background:active.bg,color:active.color});Object.assign(gp.style,{border:`3px solid ${inactive.border}`,background:inactive.bg,color:inactive.color});el("claude-key-wrap").style.display="block";el("gemini-key-wrap").style.display="none";}
+  else{Object.assign(gp.style,{border:"3px solid #4285f4",background:"rgba(66,133,244,0.15)",color:"#93c5fd"});Object.assign(cp.style,{border:`3px solid ${inactive.border}`,background:inactive.bg,color:inactive.color});el("gemini-key-wrap").style.display="block";el("claude-key-wrap").style.display="none";}
+}
+
+async function analyzeWithAI(){
+  const name=el("add-name").value;if(!name&&!state.imageFile)return;
+  const key=state.provider==="claude"?state.apiKey:state.geminiKey;
+  if(!key){showToast("Legg til API-nøkkel i innstillinger!",THEMES[state.themeId].danger);return;}
+  el("btn-analyze").textContent="🤖 ANALYSERER...";el("btn-analyze").style.opacity="0.6";
+  try{
+    const prompt=state.addType==="food"
+      ?`Estimate calories for this food. ${name?`Item: "${name}".`:""} Return ONLY JSON: {"name":"<kort navn på norsk>","calories":<number>}. No markdown.`
+      :`Estimate calories burned. ${name?`Activity: "${name}".`:""} Return ONLY JSON: {"name":"<kort navn på norsk>","calories":<number>}. No markdown.`;
+
+    let parsed;
+    if(state.provider==="claude"){
+      const content=[];
+      if(state.imageFile){const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(state.imageFile);});content.push({type:"image",source:{type:"base64",media_type:state.imageFile.type,data:b64}});}
+      content.push({type:"text",text:prompt});
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:200,messages:[{role:"user",content}]})});
+      const data=await res.json();
+      const txt=data.content.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim();
+      parsed=JSON.parse(txt);
+    } else {
+      // Gemini
+      const parts=[];
+      if(state.imageFile){const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(state.imageFile);});parts.push({inline_data:{mime_type:state.imageFile.type,data:b64}});}
+      parts.push({text:prompt});
+      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts}],generationConfig:{maxOutputTokens:200}})});
+      const data=await res.json();
+      const txt=data.candidates[0].content.parts[0].text.replace(/```json|```/g,"").trim();
+      parsed=JSON.parse(txt);
+    }
+    el("add-name").value=parsed.name;el("add-cal").value=String(parsed.calories);
+    updateAddConfirmBtn();showToast("✓ AI-analyse klar!");
+  }catch(e){showToast("Analyse feilet!",THEMES[state.themeId].danger);}
+  el("btn-analyze").textContent="🤖 ANALYSER";updateAddConfirmBtn();
+}
+
+function init(){
+  loadAll();
+  const th=THEMES[state.themeId];applyTheme(th);renderMain();renderThemePicker();
+  el("settings-budget").value=state.budget;el("settings-api").value=state.apiKey;el("settings-gemini").value=state.geminiKey;
+  setProvider(state.provider);
+  if(state.streak>0){el("streak-card").style.display="block";el("streak-info").textContent=`🔥 ${state.streak} dager på rad`;}
+  el("add-name").addEventListener("input",updateAddConfirmBtn);
+  el("add-cal").addEventListener("focus",e=>e.target.select());
+  el("add-cal").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");updateAddConfirmBtn();});
+  el("btn-pick-img").addEventListener("click",()=>el("file-input").click());
+  el("file-input").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);});
+  el("btn-remove-img").addEventListener("click",()=>{state.imageFile=null;el("img-preview-wrap").style.display="none";el("file-input").value="";updateAddConfirmBtn();});
+  el("btn-analyze").addEventListener("click",analyzeWithAI);
+  el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");});
+  el("settings-budget").addEventListener("focus",e=>e.target.select());
+  el("settings-budget").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
+  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);applyTheme(THEMES[state.themeId]);renderMain();navTo("main");showToast("⚙ LAGRET!");});
+  // Init nav
+  navTo("main");
+}
+
+document.addEventListener("DOMContentLoaded",init);
+</script>
+
+<!-- PWA Service Worker with auto-update -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").then(reg => {
+      // Check for updates on every load
+      reg.update();
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            // New version ready — skip waiting and reload
+            newWorker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+      // Reload when new SW takes control
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        window.location.reload();
+      });
+    }).catch(e => console.warn("SW:", e));
+  });
+}
+</script>
+</body>
+</html>
