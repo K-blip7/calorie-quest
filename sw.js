@@ -1,8 +1,10 @@
-const CACHE_NAME = "calorie-quest-v3";
+const CACHE_NAME = "calorie-quest-v5";
 const ASSETS = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 self.addEventListener("install", e => {
@@ -23,26 +25,25 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const url = e.request.url;
 
-  // Only handle http/https – skip chrome-extension and other schemes
+  // Only handle http/https
   if (!url.startsWith("http")) return;
 
-  // Never cache API calls
-  if (url.includes("anthropic.com") || url.includes("googleapis.com")) {
-    e.respondWith(fetch(e.request));
+  // Never cache API calls – always go to network
+  if (url.includes("anthropic.com") || url.includes("googleapis.com") || url.includes("fonts.g")) {
+    e.respondWith(fetch(e.request).catch(() => new Response("", {status: 503})));
     return;
   }
 
+  // Cache-first for app assets
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
-        if (!response || response.status !== 200 || response.type === "opaque") {
-          return response;
-        }
+        if (!response || response.status !== 200 || response.type === "opaque") return response;
         const clone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         return response;
-      });
+      }).catch(() => cached || new Response("Offline", {status: 503}));
     })
   );
 });
