@@ -1,18 +1,17 @@
-const CACHE_NAME = "calorie-quest-v1";
+const CACHE_NAME = "calorie-quest-v3";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json"
 ];
 
-// Install: cache all assets
 self.addEventListener("install", e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
+  self.skipWaiting();
 });
 
-// Activate: delete old caches
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -21,24 +20,33 @@ self.addEventListener("activate", e => {
   );
 });
 
-// Fetch: serve from cache, fall back to network
 self.addEventListener("fetch", e => {
-  // Don't cache API calls
-  if (e.request.url.includes("anthropic.com") || e.request.url.includes("googleapis.com")) {
+  const url = e.request.url;
+
+  // Only handle http/https – skip chrome-extension and other schemes
+  if (!url.startsWith("http")) return;
+
+  // Never cache API calls
+  if (url.includes("anthropic.com") || url.includes("googleapis.com")) {
     e.respondWith(fetch(e.request));
     return;
   }
+
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(response => {
-      // Cache new assets on the fly
-      const clone = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-      return response;
-    }))
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(response => {
+        if (!response || response.status !== 200 || response.type === "opaque") {
+          return response;
+        }
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        return response;
+      });
+    })
   );
 });
 
-// Auto-update: skip waiting immediately when told to
 self.addEventListener("message", e => {
   if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
 });

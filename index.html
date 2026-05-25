@@ -4,11 +4,10 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
   <meta name="theme-color" content="#0f0a1e"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="Cal Quest"/>
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
   <title>Calorie Quest</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
@@ -31,8 +30,8 @@
     input:focus{border-color:#00ff9d;box-shadow:0 0 10px rgba(0,255,157,0.2);}
     input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     .panel{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
-    #toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-60px);padding:14px 24px;font-size:16px;font-weight:700;letter-spacing:1px;border:3px solid;z-index:1000;white-space:nowrap;transition:transform 0.3s ease;pointer-events:none;backdrop-filter:blur(8px);}
-    #toast.show{transform:translateX(-50%) translateY(0);}
+    #toast{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-120px);padding:14px 24px;font-size:16px;font-weight:700;letter-spacing:1px;border:3px solid;z-index:1000;white-space:nowrap;transition:transform 0.3s ease;pointer-events:none;backdrop-filter:blur(8px);}
+    #toast.show{transform:translateX(-50%) translateY(24px);}
     .hp-seg{flex:1;height:100%;border:2px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.4);transition:all 0.4s;}
     /* Bottom nav */
     #bottom-nav{flex-shrink:0;display:flex;border-top:3px solid;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:10;background:#0a0a1fee;border-color:#1e1e3a;}
@@ -326,10 +325,50 @@ function buildVikingBg(){
   return h;
 }
 
-function heroSVG(mood,th){
+function heroSVG(mood,th,questsDone){
   const c=mood==="sad"?th.danger:mood==="neutral"?th.accent:th.primary;
-  const eyes=mood==="sad"?`<rect x="28" y="27" width="8" height="6" fill="#000" rx="1"/><rect x="44" y="27" width="8" height="6" fill="#000" rx="1"/><path d="M28 38 Q40 33 52 38" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>`:mood==="happy"?`<rect x="28" y="26" width="8" height="8" fill="#000" rx="1"/><rect x="44" y="26" width="8" height="8" fill="#000" rx="1"/><path d="M28 38 Q40 46 52 38" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>`:(`<rect x="28" y="27" width="8" height="6" fill="#000" rx="1"/><rect x="44" y="27" width="8" height="6" fill="#000" rx="1"/><line x1="28" y1="39" x2="52" y2="39" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>`);
-  return `<ellipse cx="40" cy="116" rx="20" ry="4" fill="#000" opacity="0.5"/><rect x="25" y="86" width="12" height="24" fill="${c}" opacity="0.9" rx="2"/><rect x="43" y="86" width="12" height="24" fill="${c}" opacity="0.9" rx="2"/><rect x="22" y="104" width="16" height="12" fill="${c}" rx="2"/><rect x="42" y="104" width="16" height="12" fill="${c}" rx="2"/><rect x="20" y="54" width="40" height="36" fill="${c}" opacity="0.95" rx="3"/><rect x="26" y="60" width="28" height="5" fill="rgba(0,0,0,0.3)" rx="1"/><rect x="35" y="67" width="10" height="18" fill="rgba(0,0,0,0.2)" rx="1"/><rect x="5" y="56" width="15" height="30" fill="${c}" opacity="0.85" rx="3"/><rect x="60" y="56" width="15" height="30" fill="${c}" opacity="0.85" rx="3"/><rect x="74" y="38" width="5" height="34" fill="rgba(255,255,255,0.7)" rx="1"/><rect x="69" y="62" width="14" height="5" fill="rgba(255,255,255,0.4)" rx="1"/><rect x="1" y="58" width="12" height="18" fill="${c}" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" rx="2"/><rect x="34" y="46" width="12" height="10" fill="${c}" rx="1"/><rect x="22" y="16" width="36" height="34" fill="${c}" opacity="0.95" rx="4"/><rect x="20" y="12" width="40" height="9" fill="${c}" rx="2"/><rect x="28" y="5" width="24" height="11" fill="${c}" rx="2"/><rect x="34" y="0" width="12" height="9" fill="${c}" rx="1"/>${eyes}`;
+  const gold="#ffd700";
+  const eyes=mood==="sad"
+    ?`<rect x="28" y="27" width="8" height="6" fill="#000" rx="1"/><rect x="44" y="27" width="8" height="6" fill="#000" rx="1"/><path d="M28 38 Q40 33 52 38" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>`
+    :mood==="happy"
+    ?`<rect x="28" y="26" width="8" height="8" fill="#000" rx="1"/><rect x="44" y="26" width="8" height="8" fill="#000" rx="1"/><path d="M28 38 Q40 46 52 38" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>`
+    :`<rect x="28" y="27" width="8" height="6" fill="#000" rx="1"/><rect x="44" y="27" width="8" height="6" fill="#000" rx="1"/><line x1="28" y1="39" x2="52" y2="39" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>`;
+
+  // Quest 3: cape + aura + stars
+  const cape=questsDone>=3?`<path d="M22 56 Q10 80 14 116 Q20 118 22 116 Q18 90 24 70 Z" fill="${gold}" opacity="0.7"/><path d="M58 56 Q70 80 66 116 Q60 118 58 116 Q62 90 56 70 Z" fill="${gold}" opacity="0.7"/>`:` `;
+  const aura=questsDone>=3?`<circle cx="40" cy="65" r="46" fill="none" stroke="${gold}" stroke-width="2" opacity="0.3" stroke-dasharray="4 3"/><circle cx="40" cy="65" r="53" fill="none" stroke="${gold}" stroke-width="1" opacity="0.15"/>`:` `;
+  const stars=questsDone>=3?`<text x="8" y="14" font-size="8" fill="${gold}" opacity="0.9">✦</text><text x="62" y="12" font-size="6" fill="${gold}" opacity="0.8">✦</text><text x="5" y="46" font-size="5" fill="${gold}" opacity="0.7">✦</text>`:` `;
+
+  // Quest 2: gold shield + glowing sword
+  const shield=questsDone>=2
+    ?`<rect x="0" y="55" width="15" height="23" fill="${gold}" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" rx="3"/><rect x="3" y="59" width="9" height="15" fill="${c}" rx="1"/><circle cx="7" cy="67" r="3" fill="${gold}" opacity="0.8"/>`
+    :`<rect x="1" y="58" width="12" height="18" fill="${c}" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" rx="2"/>`;
+  const sword=questsDone>=2
+    ?`<rect x="74" y="33" width="6" height="38" fill="rgba(255,255,255,0.9)" rx="1"/><rect x="68" y="59" width="16" height="6" fill="${gold}" rx="1"/><ellipse cx="77" cy="33" rx="4" ry="4" fill="${gold}" opacity="0.9"/>`
+    :`<rect x="74" y="38" width="5" height="34" fill="rgba(255,255,255,0.7)" rx="1"/><rect x="69" y="62" width="14" height="5" fill="rgba(255,255,255,0.4)" rx="1"/>`;
+
+  // Quest 1: gold chest plate + gold helmet
+  const chest=questsDone>=1
+    ?`<rect x="26" y="57" width="28" height="7" fill="${gold}" opacity="0.55" rx="1"/><rect x="33" y="66" width="14" height="20" fill="${gold}" opacity="0.35" rx="1"/><rect x="36" y="69" width="8" height="14" fill="rgba(0,0,0,0.2)" rx="1"/>`
+    :`<rect x="26" y="60" width="28" height="5" fill="rgba(0,0,0,0.3)" rx="1"/><rect x="35" y="67" width="10" height="18" fill="rgba(0,0,0,0.2)" rx="1"/>`;
+  const helmet=questsDone>=1
+    ?`<rect x="20" y="12" width="40" height="9" fill="${gold}" rx="2"/><rect x="28" y="5" width="24" height="11" fill="${gold}" rx="2"/><rect x="34" y="0" width="12" height="9" fill="${gold}" rx="1"/><rect x="22" y="18" width="6" height="4" fill="${gold}" opacity="0.7" rx="1"/><rect x="52" y="18" width="6" height="4" fill="${gold}" opacity="0.7" rx="1"/>`
+    :`<rect x="20" y="12" width="40" height="9" fill="${c}" rx="2"/><rect x="28" y="5" width="24" height="11" fill="${c}" rx="2"/><rect x="34" y="0" width="12" height="9" fill="${c}" rx="1"/>`;
+
+  return `${aura}${cape}
+    <ellipse cx="40" cy="116" rx="20" ry="4" fill="#000" opacity="0.5"/>
+    <rect x="25" y="86" width="12" height="24" fill="${c}" opacity="0.9" rx="2"/>
+    <rect x="43" y="86" width="12" height="24" fill="${c}" opacity="0.9" rx="2"/>
+    <rect x="22" y="104" width="16" height="12" fill="${c}" rx="2"/>
+    <rect x="42" y="104" width="16" height="12" fill="${c}" rx="2"/>
+    <rect x="20" y="54" width="40" height="36" fill="${c}" opacity="0.95" rx="3"/>
+    ${chest}
+    <rect x="5" y="56" width="15" height="30" fill="${c}" opacity="0.85" rx="3"/>
+    <rect x="60" y="56" width="15" height="30" fill="${c}" opacity="0.85" rx="3"/>
+    ${sword}${shield}
+    <rect x="34" y="46" width="12" height="10" fill="${c}" rx="1"/>
+    <rect x="22" y="16" width="36" height="34" fill="${c}" opacity="0.95" rx="4"/>
+    ${helmet}${eyes}${stars}`;
 }
 
 let toastTimer=null;
@@ -369,9 +408,12 @@ function renderMain(){
   const pct=Math.max(0,Math.min(100,(remaining/state.budget)*100));
   const hpColor=th.hpColor(pct);
   const mood=remaining>state.budget*0.5?"happy":remaining>0?"neutral":"sad";
-  el("hero-svg").innerHTML=heroSVG(mood,th);
-  el("hero-svg").style.filter=`drop-shadow(0 0 10px ${th.primary}) drop-shadow(0 0 20px ${th.primary}60)`;
-  el("hero-glow").style.background=`radial-gradient(ellipse at center 80%,${hpColor}18,transparent 70%)`;
+  const questsDone=QUESTS.filter(q=>q.check(state.log,remaining)).length;
+  el("hero-svg").innerHTML=heroSVG(mood,th,questsDone);
+  const glowSize=10+questsDone*8;
+  const glowOpacity=questsDone>=3?"":"60";
+  el("hero-svg").style.filter=`drop-shadow(0 0 ${glowSize}px ${th.primary}) drop-shadow(0 0 ${glowSize*2}px ${th.primary}${glowOpacity})`;
+  el("hero-glow").style.background=`radial-gradient(ellipse at center 80%,${hpColor}${questsDone>=2?"30":"18"},transparent 70%)`;
   el("hp-label").textContent=th.hpLabel;el("hp-label").style.color=th.subtext;
   el("hp-value").textContent=`${Math.max(0,remaining)} kcal`;el("hp-value").style.color=hpColor;
   const bar=el("hp-bar");bar.innerHTML="";
@@ -500,8 +542,8 @@ async function analyzeWithAI(){
   el("btn-analyze").textContent="🤖 ANALYSERER...";el("btn-analyze").style.opacity="0.6";
   try{
     const prompt=state.addType==="food"
-      ?`Estimate calories for this food. ${name?`Item: "${name}".`:""} Return ONLY JSON: {"name":"<kort navn på norsk>","calories":<number>}. No markdown.`
-      :`Estimate calories burned. ${name?`Activity: "${name}".`:""} Return ONLY JSON: {"name":"<kort navn på norsk>","calories":<number>}. No markdown.`;
+      ?`Estimate the calories in this food item. ${name?`Food: "${name}".`:""} Respond with ONLY a raw JSON object, no markdown, no explanation: {"name":"<kort norsk navn>","calories":<number>}`
+      :`Estimate calories burned for this exercise. ${name?`Activity: "${name}".`:""} Respond with ONLY a raw JSON object, no markdown, no explanation: {"name":"<kort norsk navn>","calories":<number>}`;
 
     let parsed;
     if(state.provider==="claude"){
@@ -509,22 +551,50 @@ async function analyzeWithAI(){
       if(state.imageFile){const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(state.imageFile);});content.push({type:"image",source:{type:"base64",media_type:state.imageFile.type,data:b64}});}
       content.push({type:"text",text:prompt});
       const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:200,messages:[{role:"user",content}]})});
+      if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err?.error?.message||`HTTP ${res.status}`);}
       const data=await res.json();
-      const txt=data.content.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim();
-      parsed=JSON.parse(txt);
+      if(data.error){throw new Error(data.error.message);}
+      const txt=data.content.map(b=>b.text||"").join("").trim();
+      const match=txt.match(/\{[\s\S]*\}/);
+      parsed=JSON.parse(match?match[0]:txt);
     } else {
-      // Gemini
+      // Gemini via v1beta REST – works from browser with API key
       const parts=[];
-      if(state.imageFile){const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(state.imageFile);});parts.push({inline_data:{mime_type:state.imageFile.type,data:b64}});}
+      if(state.imageFile){
+        const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(state.imageFile);});
+        parts.push({inline_data:{mime_type:state.imageFile.type,data:b64}});
+      }
       parts.push({text:prompt});
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts}],generationConfig:{maxOutputTokens:200}})});
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${key}`;
+      let res;
+      try{
+        res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:200,temperature:0.1,responseMimeType:"application/json"}})});
+      }catch(fetchErr){
+        throw new Error("Nettverksfeil – sjekk internettforbindelsen");
+      }
+      if(!res.ok){
+        const err=await res.json().catch(()=>({}));
+        const msg=err?.error?.message||`HTTP ${res.status}`;
+        if(res.status===400)throw new Error("Ugyldig API-nøkkel eller forespørsel");
+        if(res.status===403)throw new Error("API-nøkkel mangler tilgang");
+        if(res.status===429)throw new Error("For mange forespørsler – vent litt");
+        throw new Error(msg);
+      }
       const data=await res.json();
-      const txt=data.candidates[0].content.parts[0].text.replace(/```json|```/g,"").trim();
-      parsed=JSON.parse(txt);
+      if(data.error){throw new Error(data.error.message);}
+      if(!data.candidates?.length){throw new Error("Tomt svar fra Gemini");}
+      const txt=data.candidates[0].content.parts[0].text.trim();
+      const match=txt.match(/\{[\s\S]*\}/);
+      parsed=JSON.parse(match?match[0]:txt);
     }
-    el("add-name").value=parsed.name;el("add-cal").value=String(parsed.calories);
+    if(!parsed||!parsed.name||parsed.calories===undefined){throw new Error("Ugyldig svar fra AI");}
+    el("add-name").value=parsed.name;
+    el("add-cal").value=String(Math.round(parsed.calories));
     updateAddConfirmBtn();showToast("✓ AI-analyse klar!");
-  }catch(e){showToast("Analyse feilet!",THEMES[state.themeId].danger);}
+  }catch(e){
+    console.error("AI error:",e);
+    showToast("Analyse feilet: "+e.message.slice(0,40),THEMES[state.themeId].danger);
+  }
   el("btn-analyze").textContent="🤖 ANALYSER";updateAddConfirmBtn();
 }
 
@@ -552,27 +622,21 @@ function init(){
 document.addEventListener("DOMContentLoaded",init);
 </script>
 
-<!-- PWA Service Worker with auto-update -->
+<!-- PWA Service Worker -->
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").then(reg => {
-      // Check for updates on every load
-      reg.update();
-      reg.addEventListener("updatefound", () => {
-        const newWorker = reg.installing;
-        newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            // New version ready — skip waiting and reload
-            newWorker.postMessage({ type: "SKIP_WAITING" });
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").then(reg=>{
+      reg.addEventListener("updatefound",()=>{
+        const nw=reg.installing;
+        nw.addEventListener("statechange",()=>{
+          if(nw.state==="installed"&&navigator.serviceWorker.controller){
+            nw.postMessage({type:"SKIP_WAITING"});
+            navigator.serviceWorker.addEventListener("controllerchange",()=>location.reload());
           }
         });
       });
-      // Reload when new SW takes control
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        window.location.reload();
-      });
-    }).catch(e => console.warn("SW:", e));
+    }).catch(()=>{});
   });
 }
 </script>
