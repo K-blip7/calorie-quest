@@ -38,12 +38,15 @@
     .hp-seg{flex:1;height:100%;border:2px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.4);transition:all 0.4s;}
     /* Bottom nav */
     #bottom-nav{flex-shrink:0;display:flex;border-top:3px solid;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:10;background:#0a0a1fee;border-color:#1e1e3a;}
-    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px 16px;gap:5px;cursor:pointer;border:none;background:transparent;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;transition:all 0.15s;color:#444;-webkit-tap-highlight-color:transparent;}
+    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px 14px;gap:4px;cursor:pointer;border:none;background:transparent;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;transition:all 0.2s;color:#444;-webkit-tap-highlight-color:transparent;position:relative;}
     .nav-btn:active{transform:scale(0.92);}
-    .nav-btn .nav-icon{font-size:26px;line-height:1;transition:transform 0.15s;}
+    .nav-btn .nav-icon{font-size:26px;line-height:1;transition:transform 0.2s;}
     .nav-btn.active .nav-icon{transform:scale(1.15);}
-    .nav-btn .nav-dot{width:5px;height:5px;border-radius:50%;margin-top:2px;background:transparent;transition:all 0.2s;}
-    .nav-btn.active .nav-dot{background:currentColor;box-shadow:0 0 6px currentColor;}
+    .nav-btn .nav-label{font-size:12px;transition:all 0.2s;}
+    .nav-btn.active .nav-label{font-size:13px;}
+    /* Active bar on top of nav button */
+    .nav-btn::before{content:"";position:absolute;top:0;left:20%;right:20%;height:3px;border-radius:0 0 3px 3px;background:transparent;transition:all 0.2s;}
+    .nav-btn.active::before{background:currentColor;box-shadow:0 0 8px currentColor;}
     /* Add screen type toggle */
     .type-toggle{display:flex;gap:0;border:3px solid;overflow:hidden;flex-shrink:0;}
     .type-toggle .tog-btn{flex:1;padding:18px 10px;font-size:16px;font-weight:700;font-family:'Rajdhani',sans-serif;border:none;cursor:pointer;transition:all 0.15s;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:6px;}
@@ -126,11 +129,8 @@
 
     <!-- ADD -->
     <div id="screen-add" class="screen">
-      <div id="add-header" class="panel" style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid;flex-shrink:0;">
-        <div id="add-screen-title" style="font-size:20px;font-weight:700;letter-spacing:1px;"></div>
-      </div>
       <!-- Type toggle -->
-      <div style="padding:14px 14px 0;flex-shrink:0;">
+      <div style="padding:12px 12px 0;flex-shrink:0;">
         <div class="type-toggle" id="type-toggle" style="border-color:#1e1e3a;">
           <button class="tog-btn" id="tog-food" onclick="switchAddType('food')">
             <span class="tog-icon">🍎</span>MAT
@@ -238,18 +238,15 @@
   <div id="bottom-nav">
     <button class="nav-btn active" id="nav-home" onclick="navTo('main')">
       <span class="nav-icon">🏠</span>
-      <span>HOME</span>
-      <span class="nav-dot"></span>
+      <span class="nav-label">HOME</span>
     </button>
     <button class="nav-btn" id="nav-add" onclick="navTo('add')">
       <span class="nav-icon">✚</span>
-      <span>LEGG TIL</span>
-      <span class="nav-dot"></span>
+      <span class="nav-label">LEGG TIL</span>
     </button>
     <button class="nav-btn" id="nav-log" onclick="navTo('log')">
       <span class="nav-icon">📋</span>
-      <span id="nav-log-label">LOGG</span>
-      <span class="nav-dot"></span>
+      <span class="nav-label" id="nav-log-label">LOGG</span>
     </button>
   </div>
 
@@ -393,7 +390,6 @@ function applyTheme(th){
   el("stat-ex").style.background=th.panel;el("stat-ex").style.borderColor=th.border;el("stat-ex-label").style.color=th.subtext;el("stat-ex-label").textContent=th.exLabel;
   el("remaining-panel").style.background=th.panel;el("remaining-panel").style.borderColor=th.border;
   el("quests-panel").style.background=th.panel;el("quests-panel").style.borderColor=th.border;el("quests-panel").querySelector("div").style.color=th.primary;
-  el("add-header").style.background=th.panel;
   el("log-header").style.background=th.panel;el("log-header").style.borderColor=th.border;el("log-title").style.color=th.primary;el("log-title").textContent="📋 DAGENS LOGG";
   el("settings-header").style.background=th.panel;el("settings-header").style.borderColor=th.border;el("settings-title").style.color=th.primary;el("settings-title").textContent="⚙ INNSTILLINGER";
   // Bottom nav
@@ -488,11 +484,6 @@ function navTo(name){
 }
 
 function resetAddScreen(){
-  const th=THEMES[state.themeId];
-  el("add-screen-title").textContent="LEGG TIL";
-  el("add-screen-title").style.color=th.primary;
-  el("add-header").style.background=th.panel;
-  el("add-header").style.borderColor=th.border;
   switchAddType(state.addType||"food");
 }
 
@@ -545,8 +536,8 @@ async function analyzeWithAI(){
   el("btn-analyze").textContent="🤖 ANALYSERER...";el("btn-analyze").style.opacity="0.6";
   try{
     const prompt=state.addType==="food"
-      ?`Estimate the calories in this food item. ${name?`Food: "${name}".`:""} Respond with ONLY a raw JSON object, no markdown, no explanation: {"name":"<kort norsk navn>","calories":<number>}`
-      :`Estimate calories burned for this exercise. ${name?`Activity: "${name}".`:""} Respond with ONLY a raw JSON object, no markdown, no explanation: {"name":"<kort norsk navn>","calories":<number>}`;
+      ?`You are a calorie estimation API. Respond with ONLY a JSON object, nothing else, no explanation, no markdown. Format: {"name":"<norwegian name>","calories":<integer>}. Estimate calories for: ${name||"the food in the image"}.`
+      :`You are a calorie estimation API. Respond with ONLY a JSON object, nothing else, no explanation, no markdown. Format: {"name":"<norwegian activity name>","calories":<integer>}. Estimate calories burned for: ${name||"the activity in the image"}.`;
 
     let parsed;
     if(state.provider==="claude"){
@@ -571,7 +562,7 @@ async function analyzeWithAI(){
       const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
       let res, attempts=0;
       while(attempts<3){
-        try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:200,temperature:0.1,responseMimeType:"application/json"}})}); }
+        try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:200,temperature:0.1}})}); }
         catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
         if(res.status===429){ attempts++; await new Promise(r=>setTimeout(r,2000*attempts)); continue; }
         break;
@@ -587,9 +578,11 @@ async function analyzeWithAI(){
       const data=await res.json();
       if(data.error){throw new Error(data.error.message);}
       if(!data.candidates?.length){throw new Error("Tomt svar fra Gemini");}
-      const txt=data.candidates[0].content.parts[0].text.trim();
-      const match=txt.match(/\{[\s\S]*\}/);
-      parsed=JSON.parse(match?match[0]:txt);
+      const rawTxt=data.candidates[0].content.parts[0].text.trim();
+      // Extract JSON object even if surrounded by text or markdown
+      const jsonMatch=rawTxt.match(/\{[^{}]*"name"[^{}]*"calories"[^{}]*\}|\{[^{}]*"calories"[^{}]*"name"[^{}]*\}/);
+      if(!jsonMatch) throw new Error("Kunne ikke tolke svar: "+rawTxt.slice(0,60));
+      parsed=JSON.parse(jsonMatch[0]);
     }
     if(!parsed||!parsed.name||parsed.calories===undefined){throw new Error("Ugyldig svar fra AI");}
     el("add-name").value=parsed.name;
