@@ -78,16 +78,6 @@
 
     <!-- MAIN -->
     <div id="screen-main" class="screen active">
-      <div id="main-header" class="panel" style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid;flex-shrink:0;">
-        <div id="main-title" style="font-size:22px;font-weight:700;letter-spacing:2px;"></div>
-        <div style="display:flex;gap:14px;align-items:center;">
-          <div id="streak-display" style="text-align:center;display:none;">
-            <div style="font-size:24px;line-height:1;">🔥</div>
-            <div id="streak-num" style="font-size:14px;color:#f97316;margin-top:2px;"></div>
-          </div>
-          <button class="btn" id="btn-settings" onclick="navTo('settings')" style="width:52px;height:52px;font-size:22px;display:flex;align-items:center;justify-content:center;border:3px solid;background:transparent;">⚙</button>
-        </div>
-      </div>
       <div class="scroll">
         <div id="hero-panel" class="panel" style="margin:12px 12px 0;padding:18px;display:flex;gap:18px;align-items:flex-start;border:3px solid;border-radius:4px;">
           <div style="width:130px;height:170px;flex-shrink:0;position:relative;" class="hero-wrap">
@@ -129,18 +119,18 @@
 
     <!-- ADD -->
     <div id="screen-add" class="screen">
-      <!-- Type toggle -->
-      <div style="padding:12px 12px 0;flex-shrink:0;">
+      <div class="scroll" style="padding:12px;display:flex;flex-direction:column;gap:12px;">
+        <!-- Type toggle scrolls with content -->
         <div class="type-toggle" id="type-toggle" style="border-color:#1e1e3a;">
-          <button class="tog-btn" id="tog-food" onclick="switchAddType('food')">
-            <span class="tog-icon">🍎</span>MAT
+          <button class="tog-btn" id="tog-food" onclick="switchAddType('food')" style="padding:10px;gap:4px;">
+            <span class="tog-icon" style="font-size:20px;">🍎</span>
+            <span style="font-size:13px;">MAT</span>
           </button>
-          <button class="tog-btn" id="tog-ex" onclick="switchAddType('exercise')">
-            <span class="tog-icon">⚡</span>TRENING
+          <button class="tog-btn" id="tog-ex" onclick="switchAddType('exercise')" style="padding:10px;gap:4px;">
+            <span class="tog-icon" style="font-size:20px;">⚡</span>
+            <span style="font-size:13px;">TRENING</span>
           </button>
         </div>
-      </div>
-      <div class="scroll" style="padding:14px;display:flex;flex-direction:column;gap:14px;">
         <div>
           <div id="add-name-label" style="font-size:16px;letter-spacing:1px;margin-bottom:10px;opacity:0.5;"></div>
           <input id="add-name" type="text" style="font-size:16px;padding:18px;"/>
@@ -163,16 +153,14 @@
           <div style="font-size:13px;margin-top:10px;opacity:0.4;letter-spacing:1px;">Skriv navn og/eller last opp bilde — AI fyller inn kalorier</div>
         </div>
       </div>
-      <div style="padding:14px;border-top:3px solid #1a1a3a;flex-shrink:0;">
-        <button class="btn" id="btn-add-confirm" style="width:100%;padding:24px;font-size:18px;border:3px solid;border-radius:2px;opacity:0.3;cursor:not-allowed;">✓ LEGG TIL</button>
+      <!-- Fixed confirm button at bottom -->
+      <div style="padding:12px;border-top:3px solid #1a1a3a;flex-shrink:0;">
+        <button class="btn" id="btn-add-confirm" style="width:100%;padding:16px;font-size:16px;border:3px solid;border-radius:2px;opacity:0.3;cursor:not-allowed;">✓ LEGG TIL</button>
       </div>
     </div>
 
     <!-- LOG -->
     <div id="screen-log" class="screen">
-      <div id="log-header" class="panel" style="padding:18px 20px;display:flex;align-items:center;border-bottom:3px solid;flex-shrink:0;">
-        <div id="log-title" style="font-size:22px;font-weight:700;letter-spacing:1px;"></div>
-      </div>
       <div class="scroll" style="padding:14px;">
         <div id="log-empty" style="display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;height:300px;">
           <div style="font-size:54px;opacity:0.15;">📜</div>
@@ -184,9 +172,6 @@
 
     <!-- SETTINGS -->
     <div id="screen-settings" class="screen">
-      <div id="settings-header" class="panel" style="padding:18px 20px;display:flex;align-items:center;border-bottom:3px solid;flex-shrink:0;">
-        <div id="settings-title" style="font-size:22px;font-weight:700;letter-spacing:1px;"></div>
-      </div>
       <div class="scroll" style="padding:14px;display:flex;flex-direction:column;gap:16px;">
         <div id="budget-card" class="panel" style="padding:20px;border:3px solid;">
           <div style="font-size:16px;letter-spacing:1px;margin-bottom:14px;opacity:0.5;">DAGLIG KALORIBUDSJETT</div>
@@ -197,11 +182,11 @@
           <div style="font-size:16px;letter-spacing:1px;margin-bottom:16px;opacity:0.5;">🤖 AI-LEVERANDØR</div>
           <!-- Provider toggle -->
           <div style="display:flex;gap:10px;margin-bottom:20px;">
-            <button class="btn" id="btn-provider-claude" onclick="setProvider('claude')" style="flex:1;padding:16px 8px;font-size:14px;border:3px solid #a855f7;background:rgba(168,85,247,0.15);color:#c4b5fd;">
-              <div style="font-size:22px;margin-bottom:6px;">🧠</div>Claude
+            <button class="btn" id="btn-provider-claude" onclick="setProvider('claude')" style="flex:1;padding:10px 8px;font-size:13px;border:2px solid #a855f7;background:rgba(168,85,247,0.15);color:#c4b5fd;">
+              <div style="font-size:16px;margin-bottom:4px;">🧠</div>Claude
             </button>
-            <button class="btn" id="btn-provider-gemini" onclick="setProvider('gemini')" style="flex:1;padding:16px 8px;font-size:14px;border:3px solid #333;background:transparent;color:#666;">
-              <div style="font-size:22px;margin-bottom:6px;">✨</div>Gemini
+            <button class="btn" id="btn-provider-gemini" onclick="setProvider('gemini')" style="flex:1;padding:10px 8px;font-size:13px;border:2px solid #333;background:transparent;color:#666;">
+              <div style="font-size:16px;margin-bottom:4px;">✨</div>Gemini
             </button>
           </div>
           <!-- Claude key -->
@@ -227,8 +212,8 @@
           <div id="streak-info" style="font-size:20px;color:#f97316;font-weight:700;"></div>
         </div>
       </div>
-      <div style="padding:16px;border-top:3px solid #1a1a3a;flex-shrink:0;">
-        <button class="btn" id="btn-save-settings" style="width:100%;padding:24px;font-size:18px;color:#060612;background:#ffd700;border:3px solid #ffd700;box-shadow:0 0 24px rgba(255,215,0,0.5);letter-spacing:2px;">LAGRE</button>
+      <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
+        <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
       </div>
     </div>
 
@@ -247,6 +232,10 @@
     <button class="nav-btn" id="nav-log" onclick="navTo('log')">
       <span class="nav-icon">📋</span>
       <span class="nav-label" id="nav-log-label">LOGG</span>
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="navTo('settings')">
+      <span class="nav-icon" id="nav-settings-icon">⚙</span>
+      <span class="nav-label" id="nav-streak-label">INNST.</span>
     </button>
   </div>
 
@@ -382,20 +371,16 @@ function applyTheme(th){
   document.body.style.background=th.bg;document.body.style.color=th.text;
   const bgs={fantasy:buildFantasyBg,space:buildSpaceBg,ocean:buildOceanBg,viking:buildVikingBg};
   el("bg").innerHTML=bgs[th.id]();
-  el("main-header").style.cssText+=`;background:${th.panel};border-color:${th.border};`;
-  el("main-title").textContent=`${th.emoji} CALORIE QUEST`;el("main-title").style.color=th.primary;el("main-title").style.textShadow=`0 0 14px ${th.primary}70`;
-  el("btn-settings").style.borderColor=th.border;el("btn-settings").style.color=th.subtext;
+  el("main-title")&&(el("main-title").textContent=`${th.emoji} CALORIE QUEST`);
   el("hero-panel").style.background=th.panel;el("hero-panel").style.borderColor=th.border;
   el("stat-food").style.background=th.panel;el("stat-food").style.borderColor=th.border;el("stat-food-label").style.color=th.subtext;el("stat-food-label").textContent=th.foodLabel;
   el("stat-ex").style.background=th.panel;el("stat-ex").style.borderColor=th.border;el("stat-ex-label").style.color=th.subtext;el("stat-ex-label").textContent=th.exLabel;
   el("remaining-panel").style.background=th.panel;el("remaining-panel").style.borderColor=th.border;
   el("quests-panel").style.background=th.panel;el("quests-panel").style.borderColor=th.border;el("quests-panel").querySelector("div").style.color=th.primary;
-  el("log-header").style.background=th.panel;el("log-header").style.borderColor=th.border;el("log-title").style.color=th.primary;el("log-title").textContent="📋 DAGENS LOGG";
-  el("settings-header").style.background=th.panel;el("settings-header").style.borderColor=th.border;el("settings-title").style.color=th.primary;el("settings-title").textContent="⚙ INNSTILLINGER";
   // Bottom nav
   const nav=el("bottom-nav");nav.style.background=th.panel;nav.style.borderColor=th.border;
   document.querySelectorAll(".nav-btn").forEach(b=>{b.style.color="#444";});
-  const activeNav=el({main:"nav-home",add:"nav-add",log:"nav-log"}[state.screen]||"nav-home");
+  const activeNav=el({main:"nav-home",add:"nav-add",log:"nav-log",settings:"nav-settings"}[state.screen]||"nav-home");
   if(activeNav)activeNav.style.color=th.primary;
   ["budget-card","api-card","theme-card","streak-card"].forEach(id=>{const c=el(id);if(c){c.style.background=th.panel;c.style.borderColor=th.border;}});
   el("ai-panel").style.background=th.panel;el("ai-panel").style.borderColor=th.secondary+"60";el("ai-panel").querySelector("div").style.color=th.secondary;
@@ -424,7 +409,9 @@ function renderMain(){
   el("remaining-panel").style.background=remaining<0?`linear-gradient(135deg,${th.danger}15,${th.panel})`:th.panel;
   const ql=el("quests-list");ql.innerHTML="";
   QUESTS.forEach(q=>{const done=q.check(state.log,remaining);const d=document.createElement("div");d.style.cssText=`display:flex;align-items:center;gap:14px;padding:14px 16px;border:3px solid ${done?th.accent+"60":th.border+"60"};background:${done?th.accent+"10":"rgba(0,0,0,0.3)"};`;d.innerHTML=`<div style="width:30px;height:30px;flex-shrink:0;border:3px solid ${done?th.accent:"rgba(255,255,255,0.1)"};background:${done?th.accent:"transparent"};display:flex;align-items:center;justify-content:center;font-size:14px;color:${th.bg};box-shadow:${done?`0 0 10px ${th.accent}`:""}">${done?"✓":""}</div><div style="flex:1;font-size:16px;color:${done?th.accent:th.subtext};">${q.icon} ${q.label}</div>`;ql.appendChild(d);});
-  const sd=el("streak-display");if(state.streak>0){sd.style.display="block";el("streak-num").textContent=state.streak;}else sd.style.display="none";
+  // Streak shown in settings nav button
+  if(state.streak>0){el("nav-settings-icon").textContent="🔥";el("nav-streak-label").textContent=String(state.streak);}
+  else{el("nav-settings-icon").textContent="⚙";el("nav-streak-label").textContent="INNST.";}
   el("nav-log-label").textContent=`LOGG${state.log.length?` (${state.log.length})`:""}`;
 }
 
@@ -473,9 +460,9 @@ function navTo(name){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   el("screen-"+name).classList.add("active");
   state.screen=name;
-  const map={main:"nav-home",add:"nav-add",log:"nav-log"};
-  document.querySelectorAll(".nav-btn").forEach(b=>{b.classList.remove("active");b.style.color="#444";});
+  const map={main:"nav-home",add:"nav-add",log:"nav-log",settings:"nav-settings"};
   const th=THEMES[state.themeId];
+  document.querySelectorAll(".nav-btn").forEach(b=>{b.classList.remove("active");b.style.color="#444";});
   const active=el(map[name]);
   if(active){active.classList.add("active");active.style.color=th.primary;}
   el("nav-log-label").textContent=`LOGG${state.log.length?` (${state.log.length})`:""}`;
