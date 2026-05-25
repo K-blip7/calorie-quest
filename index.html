@@ -550,10 +550,19 @@ async function analyzeWithAI(){
       parts.push({text:prompt});
       const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
       let res, attempts=0;
-      while(attempts<3){
+      while(attempts<2){
         try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:500,temperature:0.1}})}); }
         catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
-        if(res.status===429){ attempts++; await new Promise(r=>setTimeout(r,4000*attempts)); continue; }
+        if(res.status===429){
+          attempts++;
+          // Wait with countdown
+          const wait=62;
+          for(let i=wait;i>0;i--){
+            el("btn-analyze").textContent=`⏳ VENTER ${i}s...`;
+            await new Promise(r=>setTimeout(r,1000));
+          }
+          continue;
+        }
         break;
       }
       if(!res.ok){
