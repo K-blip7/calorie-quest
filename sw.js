@@ -1,4 +1,4 @@
-const CACHE_NAME = "calorie-quest-v8";
+const CACHE_NAME = "calorie-quest-v9";
 const ASSETS = [
   "./",
   "./index.html",
