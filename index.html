@@ -566,6 +566,8 @@ async function analyzeWithAI(){
       if(data.error){throw new Error(data.error.message);}
       if(!data.candidates?.length){throw new Error("Tomt svar fra Gemini");}
       const rawTxt=data.candidates[0].content.parts[0].text.trim();
+      console.log("Gemini raw response:", rawTxt);
+      console.log("Full data:", JSON.stringify(data).slice(0,500));
       // Extract JSON - try multiple strategies
       let parsed;
       // Strategy 1: find first { to last }
