@@ -146,8 +146,10 @@
             <button class="btn" id="btn-remove-img" style="position:absolute;top:8px;right:8px;width:38px;height:38px;background:#0a0a1f;border:3px solid #ef4444;color:#ef4444;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
           </div>
           <div style="display:flex;gap:10px;">
-            <button class="btn" id="btn-pick-img" style="flex:1;padding:18px;font-size:14px;background:#0a0a1f;border:3px dashed #1e1e3a;color:#666;">📷 BILDE</button>
+            <button class="btn" id="btn-pick-camera" style="flex:1;padding:18px;font-size:14px;background:#0a0a1f;border:3px dashed #1e1e3a;color:#666;">📷 KAMERA</button>
+            <button class="btn" id="btn-pick-img" style="flex:1;padding:18px;font-size:14px;background:#0a0a1f;border:3px dashed #1e1e3a;color:#666;">🖼 ALBUM</button>
             <input id="file-input" type="file" accept="image/*" style="display:none;width:auto;border:none;padding:0;background:none;"/>
+            <input id="file-input-camera" type="file" accept="image/*" capture="environment" style="display:none;width:auto;border:none;padding:0;background:none;"/>
             <button class="btn" id="btn-analyze" style="flex:2;padding:18px;font-size:15px;border:3px solid;opacity:0.4;">🤖 ANALYSER</button>
           </div>
           <div style="font-size:13px;margin-top:10px;opacity:0.4;letter-spacing:1px;">Skriv navn og/eller last opp bilde — AI fyller inn kalorier</div>
@@ -606,7 +608,9 @@ function init(){
   el("add-cal").addEventListener("focus",e=>e.target.select());
   el("add-cal").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");updateAddConfirmBtn();});
   el("btn-pick-img").addEventListener("click",()=>el("file-input").click());
+  el("btn-pick-camera").addEventListener("click",()=>el("file-input-camera").click());
   el("file-input").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);});
+  el("file-input-camera").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);});
   el("btn-remove-img").addEventListener("click",()=>{state.imageFile=null;el("img-preview-wrap").style.display="none";el("file-input").value="";updateAddConfirmBtn();});
   el("btn-analyze").addEventListener("click",analyzeWithAI);
   el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");});
