@@ -566,10 +566,22 @@ async function analyzeWithAI(){
       if(data.error){throw new Error(data.error.message);}
       if(!data.candidates?.length){throw new Error("Tomt svar fra Gemini");}
       const rawTxt=data.candidates[0].content.parts[0].text.trim();
-      // Extract JSON object even if surrounded by text or markdown
-      const jsonMatch=rawTxt.match(/\{[^{}]*"name"[^{}]*"calories"[^{}]*\}|\{[^{}]*"calories"[^{}]*"name"[^{}]*\}/);
-      if(!jsonMatch) throw new Error("Kunne ikke tolke svar: "+rawTxt.slice(0,60));
-      parsed=JSON.parse(jsonMatch[0]);
+      // Extract JSON - try multiple strategies
+      let parsed;
+      // Strategy 1: find first { to last }
+      const start=rawTxt.indexOf("{"), end=rawTxt.lastIndexOf("}");
+      if(start!==-1&&end!==-1&&end>start){
+        try{ parsed=JSON.parse(rawTxt.slice(start,end+1)); }catch{}
+      }
+      // Strategy 2: extract name and calories with regex
+      if(!parsed||!parsed.name||parsed.calories===undefined){
+        const nameM=rawTxt.match(/"name"\s*:\s*"([^"]+)"/);
+        const calM=rawTxt.match(/"calories"\s*:\s*(\d+)/);
+        if(nameM&&calM) parsed={name:nameM[1],calories:parseInt(calM[1])};
+      }
+      if(!parsed||!parsed.name||parsed.calories===undefined){
+        throw new Error("Kunne ikke tolke svar fra AI");
+      }
     }
     if(!parsed||!parsed.name||parsed.calories===undefined){throw new Error("Ugyldig svar fra AI");}
     el("add-name").value=parsed.name;
