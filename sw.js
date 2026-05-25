@@ -1,4 +1,4 @@
-const CACHE_NAME = "calorie-quest-v5";
+const CACHE_NAME = "calorie-quest-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -24,17 +24,11 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   const url = e.request.url;
-
-  // Only handle http/https
   if (!url.startsWith("http")) return;
-
-  // Never cache API calls – always go to network
   if (url.includes("anthropic.com") || url.includes("googleapis.com") || url.includes("fonts.g")) {
     e.respondWith(fetch(e.request).catch(() => new Response("", {status: 503})));
     return;
   }
-
-  // Cache-first for app assets
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
