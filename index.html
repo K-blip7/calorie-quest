@@ -549,44 +549,27 @@ async function analyzeWithAI(){
       }
       parts.push({text:prompt});
       const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
-      let res, attempts=0;
-      while(attempts<2){
-        try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:500,temperature:0.1}})}); }
-        catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
-        if(res.status===429){
-          attempts++;
-          // Wait with countdown
-          const wait=62;
-          for(let i=wait;i>0;i--){
-            el("btn-analyze").textContent=`⏳ VENTER ${i}s...`;
-            await new Promise(r=>setTimeout(r,1000));
-          }
-          continue;
-        }
-        break;
-      }
+      let res;
+      try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:500,temperature:0.1}})}); }
+      catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
       if(!res.ok){
         const err=await res.json().catch(()=>({}));
         const msg=err?.error?.message||`HTTP ${res.status}`;
-        if(res.status===400)throw new Error("Ugyldig API-nøkkel eller forespørsel");
+        if(res.status===400)throw new Error("Ugyldig API-nøkkel");
         if(res.status===403)throw new Error("API-nøkkel mangler tilgang");
-        if(res.status===429)throw new Error("For mange forespørsler – vent litt");
+        if(res.status===429)throw new Error("Kvote nådd – vent litt eller prøv i morgen");
         throw new Error(msg);
       }
       const data=await res.json();
       if(data.error){throw new Error(data.error.message);}
       if(!data.candidates?.length){throw new Error("Tomt svar fra Gemini");}
       const rawTxt=data.candidates[0].content.parts[0].text.trim();
-      console.log("Gemini raw response:", rawTxt);
-      console.log("Full data:", JSON.stringify(data).slice(0,500));
       // Extract JSON - try multiple strategies
       let parsed;
-      // Strategy 1: find first { to last }
       const start=rawTxt.indexOf("{"), end=rawTxt.lastIndexOf("}");
       if(start!==-1&&end!==-1&&end>start){
         try{ parsed=JSON.parse(rawTxt.slice(start,end+1)); }catch{}
       }
-      // Strategy 2: extract name and calories with regex
       if(!parsed||!parsed.name||parsed.calories===undefined){
         const nameM=rawTxt.match(/"name"\s*:\s*"([^"]+)"/);
         const calM=rawTxt.match(/"calories"\s*:\s*(\d+)/);
