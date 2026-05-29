@@ -79,6 +79,7 @@
     <!-- MAIN -->
     <div id="screen-main" class="screen active">
       <div class="scroll">
+        <div id="date-header" style="text-align:center;padding:14px 12px 0;font-size:15px;letter-spacing:1px;opacity:0.6;"></div>
         <div id="hero-panel" class="panel" style="margin:12px 12px 0;padding:18px;display:flex;gap:18px;align-items:flex-start;border:3px solid;border-radius:4px;">
           <div style="width:130px;height:170px;flex-shrink:0;position:relative;" class="hero-wrap">
             <div id="hero-glow" style="position:absolute;inset:0;"></div>
@@ -107,11 +108,16 @@
         <div id="remaining-panel" class="panel" style="margin:12px 12px 0;padding:22px 16px;text-align:center;border:3px solid;border-radius:4px;">
           <div style="font-size:16px;letter-spacing:2px;margin-bottom:10px;opacity:0.5;">GJENSTÅENDE</div>
           <div id="remaining-val" style="font-size:64px;line-height:1;font-weight:700;transition:color 0.3s;"></div>
-          <div id="budget-label" style="font-size:15px;margin-top:10px;opacity:0.4;letter-spacing:1px;"></div>
+          <div id="net-calc" style="font-size:14px;margin-top:12px;opacity:0.55;letter-spacing:0.5px;"></div>
+          <div id="budget-label" style="font-size:15px;margin-top:6px;opacity:0.4;letter-spacing:1px;"></div>
         </div>
         <div id="quests-panel" class="panel" style="margin:12px 12px 0;padding:18px;border:3px solid;border-radius:4px;">
           <div style="font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:16px;">📜 QUESTS</div>
           <div id="quests-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div id="quickadd-panel" class="panel" style="margin:12px 12px 0;padding:18px;border:3px solid;border-radius:4px;display:none;">
+          <div style="font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:14px;">⚡ HURTIGVALG</div>
+          <div id="quickadd-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
         </div>
         <div style="height:16px;"></div>
       </div>
@@ -177,14 +183,20 @@
     <!-- SETTINGS -->
     <div id="screen-settings" class="screen">
       <div class="scroll" style="padding:14px;display:flex;flex-direction:column;gap:16px;">
+        <!-- 1. Budget -->
         <div id="budget-card" class="panel" style="padding:20px;border:3px solid;">
           <div style="font-size:16px;letter-spacing:1px;margin-bottom:14px;opacity:0.5;">DAGLIG KALORIBUDSJETT</div>
           <input id="settings-budget" type="text" inputmode="numeric" style="font-size:28px;text-align:center;padding:16px;letter-spacing:2px;font-weight:700;border-color:rgba(255,215,0,0.4);color:#ffd700;"/>
           <div style="font-size:14px;margin-top:10px;text-align:center;opacity:0.3;letter-spacing:1px;">KCAL PER DAG</div>
         </div>
+        <!-- 2. Theme -->
+        <div id="theme-card" class="panel" style="padding:20px;border:3px solid;">
+          <div style="font-size:16px;letter-spacing:1px;margin-bottom:16px;opacity:0.5;">🎨 VELG TEMA</div>
+          <div id="theme-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <!-- 3. API -->
         <div id="api-card" class="panel" style="padding:20px;border:3px solid;">
           <div style="font-size:16px;letter-spacing:1px;margin-bottom:16px;opacity:0.5;">🤖 AI-LEVERANDØR</div>
-          <!-- Provider toggle -->
           <div style="display:flex;gap:10px;margin-bottom:20px;">
             <button class="btn" id="btn-provider-claude" onclick="setProvider('claude')" style="flex:1;padding:10px 8px;font-size:13px;border:2px solid #a855f7;background:rgba(168,85,247,0.15);color:#c4b5fd;">
               <div style="font-size:16px;margin-bottom:4px;">🧠</div>Claude
@@ -193,13 +205,11 @@
               <div style="font-size:16px;margin-bottom:4px;">✨</div>Gemini
             </button>
           </div>
-          <!-- Claude key -->
           <div id="claude-key-wrap">
             <div style="font-size:14px;letter-spacing:1px;margin-bottom:8px;opacity:0.5;">ANTHROPIC API-NØKKEL</div>
             <input id="settings-api" type="password" placeholder="sk-ant-..." style="font-size:14px;padding:14px;margin-bottom:8px;"/>
             <div style="font-size:12px;opacity:0.35;line-height:1.6;">Hent nøkkel på console.anthropic.com</div>
           </div>
-          <!-- Gemini key -->
           <div id="gemini-key-wrap" style="display:none;">
             <div style="font-size:14px;letter-spacing:1px;margin-bottom:8px;opacity:0.5;">GOOGLE GEMINI API-NØKKEL</div>
             <input id="settings-gemini" type="password" placeholder="AIza..." style="font-size:14px;padding:14px;margin-bottom:8px;"/>
@@ -207,14 +217,13 @@
           </div>
           <div style="font-size:12px;margin-top:12px;opacity:0.35;line-height:1.6;">Nøkler lagres kun lokalt på denne enheten.</div>
         </div>
-        <div id="theme-card" class="panel" style="padding:20px;border:3px solid;">
-          <div style="font-size:16px;letter-spacing:1px;margin-bottom:16px;opacity:0.5;">🎨 VELG TEMA</div>
-          <div id="theme-list" style="display:flex;flex-direction:column;gap:12px;"></div>
-        </div>
+        <!-- Streak (if active) -->
         <div id="streak-card" class="panel" style="padding:20px;border:3px solid;display:none;">
           <div style="font-size:16px;letter-spacing:1px;margin-bottom:10px;opacity:0.5;">STREAK</div>
           <div id="streak-info" style="font-size:20px;color:#f97316;font-weight:700;"></div>
         </div>
+        <!-- Reset day (forslag A) -->
+        <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -250,10 +259,10 @@ const TODAY = new Date().toISOString().split("T")[0];
 let state = { themeId:"fantasy", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null };
 
 const THEMES = {
-  fantasy:{id:"fantasy",name:"Fantasy Kingdom",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#0f0a1e",panel:"#1a1030dd",border:"#4c1d95",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
-  space:{id:"space",name:"Space RPG",emoji:"🚀",primary:"#00cfff",secondary:"#a855f7",accent:"#00ff9d",danger:"#ff4d6d",bg:"#020612",panel:"#080f1edd",border:"#0e3a6e",text:"#e0f0ff",subtext:"#5b9cf6",hpColor:p=>p>50?"#00cfff":p>20?"#a855f7":"#ff4d6d",hpLabel:"⚡ ENERGY",foodLabel:"🍱 INTAKE",exLabel:"🔥 OUTPUT",btnFood:{bg:"linear-gradient(135deg,#020f1f,#0a2545)",border:"#1d4ed8",color:"#93c5fd"},btnEx:{bg:"linear-gradient(135deg,#0f0020,#1e0050)",border:"#7c3aed",color:"#c4b5fd"},btnLog:{bg:"linear-gradient(135deg,#001a0d,#003d1f)",border:"#065f46",color:"#6ee7b7"}},
-  ocean:{id:"ocean",name:"Ocean Adventure",emoji:"🌊",primary:"#06b6d4",secondary:"#0ea5e9",accent:"#f59e0b",danger:"#f43f5e",bg:"#041c2c",panel:"#062436dd",border:"#0e4f6e",text:"#e0f8ff",subtext:"#38bcd4",hpColor:p=>p>50?"#06b6d4":p>20?"#f59e0b":"#f43f5e",hpLabel:"💧 HP",foodLabel:"🐟 SPIST",exLabel:"🌊 BRENT",btnFood:{bg:"linear-gradient(135deg,#042030,#073a55)",border:"#0e7490",color:"#67e8f9"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#d97706",color:"#fcd34d"},btnLog:{bg:"linear-gradient(135deg,#0a1a00,#183000)",border:"#15803d",color:"#86efac"}},
-  viking:{id:"viking",name:"Viking Norse",emoji:"🌋",primary:"#f97316",secondary:"#dc2626",accent:"#fbbf24",danger:"#dc2626",bg:"#1a0a00",panel:"#2a1200dd",border:"#7c2d12",text:"#fef3c7",subtext:"#d4720a",hpColor:p=>p>50?"#f97316":p>20?"#fbbf24":"#dc2626",hpLabel:"🍺 MEAD",foodLabel:"🥩 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1a0800,#3d1800)",border:"#c2410c",color:"#fdba74"},btnEx:{bg:"linear-gradient(135deg,#1a0000,#3d0000)",border:"#991b1b",color:"#fca5a5"},btnLog:{bg:"linear-gradient(135deg,#1a1000,#3a2500)",border:"#a16207",color:"#fde68a"}}
+  fantasy:{id:"fantasy",name:"Fantasy Kingdom",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#2a1f4a",panel:"#3d2d66dd",border:"#6d4baf",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
+  space:{id:"space",name:"Space RPG",emoji:"🚀",primary:"#00cfff",secondary:"#a855f7",accent:"#00ff9d",danger:"#ff4d6d",bg:"#0e1d3d",panel:"#15294add",border:"#1d558f",text:"#e0f0ff",subtext:"#5b9cf6",hpColor:p=>p>50?"#00cfff":p>20?"#a855f7":"#ff4d6d",hpLabel:"⚡ ENERGY",foodLabel:"🍱 INTAKE",exLabel:"🔥 OUTPUT",btnFood:{bg:"linear-gradient(135deg,#020f1f,#0a2545)",border:"#1d4ed8",color:"#93c5fd"},btnEx:{bg:"linear-gradient(135deg,#0f0020,#1e0050)",border:"#7c3aed",color:"#c4b5fd"},btnLog:{bg:"linear-gradient(135deg,#001a0d,#003d1f)",border:"#065f46",color:"#6ee7b7"}},
+  ocean:{id:"ocean",name:"Ocean Adventure",emoji:"🌊",primary:"#06b6d4",secondary:"#0ea5e9",accent:"#f59e0b",danger:"#f43f5e",bg:"#0a3a52",panel:"#0e4a66dd",border:"#1a6e8f",text:"#e0f8ff",subtext:"#38bcd4",hpColor:p=>p>50?"#06b6d4":p>20?"#f59e0b":"#f43f5e",hpLabel:"💧 HP",foodLabel:"🐟 SPIST",exLabel:"🌊 BRENT",btnFood:{bg:"linear-gradient(135deg,#042030,#073a55)",border:"#0e7490",color:"#67e8f9"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#d97706",color:"#fcd34d"},btnLog:{bg:"linear-gradient(135deg,#0a1a00,#183000)",border:"#15803d",color:"#86efac"}},
+  viking:{id:"viking",name:"Viking Norse",emoji:"🌋",primary:"#f97316",secondary:"#dc2626",accent:"#fbbf24",danger:"#dc2626",bg:"#3a2010",panel:"#4d2e15dd",border:"#a8481f",text:"#fef3c7",subtext:"#d4720a",hpColor:p=>p>50?"#f97316":p>20?"#fbbf24":"#dc2626",hpLabel:"🍺 MEAD",foodLabel:"🥩 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1a0800,#3d1800)",border:"#c2410c",color:"#fdba74"},btnEx:{bg:"linear-gradient(135deg,#1a0000,#3d0000)",border:"#991b1b",color:"#fca5a5"},btnLog:{bg:"linear-gradient(135deg,#1a1000,#3a2500)",border:"#a16207",color:"#fde68a"}}
 };
 
 const QUESTS = [
@@ -282,7 +291,7 @@ function loadAll(){
 function saveDay(){save("cq_day",{date:TODAY,log:state.log})}
 
 function buildFantasyBg(){
-  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#0f0a1e 0%,#1a0a3e 40%,#0d0520 100%);"></div>`;
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#2a1f4a 0%,#382862 40%,#241a44 100%);"></div>`;
   h+=`<div style="position:absolute;top:30px;right:40px;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,#fffde0 60%,#ffd700 100%);box-shadow:0 0 30px #ffd70080;animation:moonGlow 4s ease-in-out infinite;"></div>`;
   for(let i=0;i<40;i++) h+=`<div style="position:absolute;left:${(i*37+13)%100}%;top:${(i*23+7)%70}%;width:${i%5===0?3:2}px;height:${i%5===0?3:2}px;border-radius:50%;background:#fff;animation:twinkle ${1.5+i%3}s ${i*0.2}s ease-in-out infinite;"></div>`;
   for(let i=0;i<3;i++) h+=`<div style="position:absolute;top:${20+i*15}%;width:${80+i*20}px;height:${20+i*8}px;border-radius:20px;background:rgba(100,60,180,0.15);animation:cloudDrift ${18+i*7}s ${i*5}s linear infinite;"></div>`;
@@ -290,7 +299,7 @@ function buildFantasyBg(){
   return h;
 }
 function buildSpaceBg(){
-  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#020612,#030a1a,#020810);"></div>`;
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#0e1d3d,#13284a,#0c1830);"></div>`;
   h+=`<div style="position:absolute;top:10%;left:10%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.15),transparent 70%);animation:nebulaPulse 6s ease-in-out infinite;"></div>`;
   h+=`<div style="position:absolute;top:30%;right:5%;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(0,207,255,0.1),transparent 70%);animation:nebulaPulse 8s 2s ease-in-out infinite;"></div>`;
   h+=`<div style="position:absolute;top:20px;left:30px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#1d4ed8,#0a0a3a);box-shadow:0 0 20px rgba(29,78,216,0.5);"><div style="position:absolute;top:40%;left:-10px;right:-10px;height:8px;border-radius:50%;border:3px solid rgba(0,207,255,0.4);transform:rotate(-15deg);"></div></div>`;
@@ -299,7 +308,7 @@ function buildSpaceBg(){
   return h;
 }
 function buildOceanBg(){
-  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#041c2c,#062436,#041a28,#020e18);"></div>`;
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#0a3a52,#0e4a66,#0a3550,#082838);"></div>`;
   for(let i=0;i<4;i++) h+=`<div style="position:absolute;top:0;left:${15+i*22}%;width:${30+i*10}px;height:60%;background:linear-gradient(180deg,rgba(6,182,212,0.2),transparent);transform:rotate(${-10+i*7}deg);transform-origin:top center;animation:lightRay ${3+i}s ${i*0.5}s ease-in-out infinite;"></div>`;
   for(let i=0;i<18;i++) h+=`<div style="position:absolute;bottom:${-10-i*5}%;left:${(i*19+5)%95}%;width:${6+i%4*4}px;height:${6+i%4*4}px;border-radius:50%;border:1.5px solid rgba(6,182,212,0.5);animation:bubble ${6+i%5*2}s ${i*0.8}s linear infinite;"></div>`;
   for(let i=0;i<5;i++) h+=`<div style="position:absolute;bottom:0;left:${5+i*22}%;width:12px;height:${50+i%3*20}px;background:linear-gradient(180deg,rgba(5,150,105,0),rgba(5,150,105,0.7));border-radius:50% 50% 0 0;transform-origin:bottom center;animation:sway ${2.5+i*0.4}s ${i*0.3}s ease-in-out infinite;"></div>`;
@@ -309,7 +318,7 @@ function buildOceanBg(){
   return h;
 }
 function buildVikingBg(){
-  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#0d0500,#1a0a00,#0a0500);"></div>`;
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#3a2010,#4a2a15,#301a0c);"></div>`;
   h+=`<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(80,40,0,0.08) 0px,rgba(80,40,0,0.08) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,rgba(80,40,0,0.08) 0px,rgba(80,40,0,0.08) 1px,transparent 1px,transparent 60px);"></div>`;
   for(let i=0;i<3;i++){h+=`<div style="position:absolute;bottom:0;left:${2+i*4}%;width:18px;height:${60+i*20}px;background:linear-gradient(180deg,transparent,rgba(249,115,22,0.${4+i}),rgba(220,38,38,0.6));border-radius:50% 50% 0 0;animation:flicker ${0.8+i*0.3}s ${i*0.2}s ease-in-out infinite;transform-origin:bottom center;"></div>`;h+=`<div style="position:absolute;bottom:0;right:${2+i*4}%;width:18px;height:${60+i*20}px;background:linear-gradient(180deg,transparent,rgba(249,115,22,0.${4+i}),rgba(220,38,38,0.6));border-radius:50% 50% 0 0;animation:flicker ${0.9+i*0.25}s ${i*0.15+0.1}s ease-in-out infinite;transform-origin:bottom center;"></div>`;}
   for(let i=0;i<20;i++) h+=`<div style="position:absolute;bottom:${i*3}%;left:${(i*17+3)%95}%;width:3px;height:3px;border-radius:50%;background:${i%2?"#f97316":"#fbbf24"};animation:ember ${2+i%3}s ${i*0.4}s ease-out infinite;opacity:0;"></div>`;
@@ -381,6 +390,7 @@ function applyTheme(th){
   el("stat-ex").style.background=th.panel;el("stat-ex").style.borderColor=th.border;el("stat-ex-label").style.color=th.subtext;el("stat-ex-label").textContent=th.exLabel;
   el("remaining-panel").style.background=th.panel;el("remaining-panel").style.borderColor=th.border;
   el("quests-panel").style.background=th.panel;el("quests-panel").style.borderColor=th.border;el("quests-panel").querySelector("div").style.color=th.primary;
+  el("quickadd-panel").style.background=th.panel;el("quickadd-panel").style.borderColor=th.border;
   // Bottom nav
   const nav=el("bottom-nav");nav.style.background=th.panel;nav.style.borderColor=th.border;
   document.querySelectorAll(".nav-btn").forEach(b=>{b.style.color="#444";});
@@ -411,8 +421,59 @@ function renderMain(){
   el("remaining-val").textContent=remaining;el("remaining-val").style.color=hpColor;el("remaining-val").style.textShadow=`0 0 28px ${hpColor}`;el("remaining-val").style.animation=remaining<0?"pulse 1s infinite":"none";el("remaining-val").style.fontSize=Math.abs(remaining)>9999?"44px":"64px";
   el("budget-label").textContent=`AV ${state.budget} KCAL`;
   el("remaining-panel").style.background=remaining<0?`linear-gradient(135deg,${th.danger}15,${th.panel})`:th.panel;
+
+  // (B) Date header in Norwegian
+  const months=["januar","februar","mars","april","mai","juni","juli","august","september","oktober","november","desember"];
+  const now=new Date();
+  el("date-header").textContent=`I dag, ${now.getDate()}. ${months[now.getMonth()]}`;
+
+  // (D) Net calculation line
+  if(used>0||burned>0){
+    el("net-calc").style.display="block";
+    el("net-calc").textContent=burned>0?`spist ${used} − trent ${burned} = ${used-burned} netto`:`spist ${used} kcal`;
+  } else {
+    el("net-calc").style.display="none";
+  }
+
   const ql=el("quests-list");ql.innerHTML="";
   QUESTS.forEach(q=>{const done=q.check(state.log,remaining);const d=document.createElement("div");d.style.cssText=`display:flex;align-items:center;gap:14px;padding:14px 16px;border:3px solid ${done?th.accent+"60":th.border+"60"};background:${done?th.accent+"10":"rgba(0,0,0,0.3)"};`;d.innerHTML=`<div style="width:30px;height:30px;flex-shrink:0;border:3px solid ${done?th.accent:"rgba(255,255,255,0.1)"};background:${done?th.accent:"transparent"};display:flex;align-items:center;justify-content:center;font-size:14px;color:${th.bg};box-shadow:${done?`0 0 10px ${th.accent}`:""}">${done?"✓":""}</div><div style="flex:1;font-size:16px;color:${done?th.accent:th.subtext};">${q.icon} ${q.label}</div>`;ql.appendChild(d);});
+
+  // (C) Quick-add recent foods
+  const qp=el("quickadd-panel"),qlist=el("quickadd-list");
+  qp.querySelector("div").style.color=th.primary;
+  // Get last 5 unique food names
+  const recent=[];
+  for(let i=state.log.length-1;i>=0&&recent.length<5;i--){
+    const e=state.log[i];
+    if(e.type==="food"&&!recent.find(r=>r.name===e.name)) recent.push(e);
+  }
+  if(recent.length>0){
+    qp.style.display="block";
+    qlist.innerHTML="";
+    recent.forEach(item=>{
+      const chip=document.createElement("button");
+      chip.className="btn";
+      chip.style.cssText=`padding:10px 14px;font-size:14px;background:${th.btnFood.bg};border:2px solid ${th.btnFood.border};color:${th.btnFood.color};border-radius:2px;`;
+      chip.textContent=`+ ${item.name} (${item.calories})`;
+      chip.addEventListener("click",()=>{
+        state.log.push({id:Date.now(),name:item.name,calories:item.calories,type:"food"});
+        saveDay();renderMain();showToast("✓ LAGT TIL!");
+      });
+      qlist.appendChild(chip);
+    });
+  } else {
+    qp.style.display="none";
+  }
+
+  // (E) Empty-state encouragement via net-calc area when log empty
+  if(state.log.length===0){
+    el("net-calc").style.display="block";
+    el("net-calc").textContent="Klar for dagen! Logg ditt første måltid 🥕";
+    el("net-calc").style.opacity="0.7";
+  } else {
+    el("net-calc").style.opacity="0.55";
+  }
+
   // Streak shown in settings nav button
   if(state.streak>0){el("nav-settings-icon").textContent="🔥";el("nav-streak-label").textContent=String(state.streak);}
   else{el("nav-settings-icon").textContent="⚙";el("nav-streak-label").textContent="INNST.";}
@@ -619,6 +680,13 @@ function init(){
   el("settings-budget").addEventListener("focus",e=>e.target.select());
   el("settings-budget").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
   el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);applyTheme(THEMES[state.themeId]);renderMain();navTo("main");showToast("⚙ LAGRET!");});
+  // (A) Reset day button
+  el("btn-reset-day").addEventListener("click",()=>{
+    if(state.log.length===0){showToast("Loggen er allerede tom");return;}
+    if(confirm("Nullstille dagens logg? Dette kan ikke angres.")){
+      state.log=[];saveDay();renderMain();navTo("main");showToast("🗑 LOGG NULLSTILT!");
+    }
+  });
   // Init nav
   navTo("main");
 }
