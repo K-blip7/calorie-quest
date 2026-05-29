@@ -572,13 +572,7 @@ async function analyzeWithAI(){
       if(!data.candidates?.length){throw new Error("Tomt svar fra Gemini");}
       const cand=data.candidates[0];
       const rawTxt=(cand.content?.parts?.[0]?.text||"").trim();
-      // Debug: show raw response + finish reason in error box
-      const ebDbg=el("error-box");
-      ebDbg.style.display="block";
-      ebDbg.style.borderColor="#f59e0b";ebDbg.style.background="rgba(245,158,11,0.1)";ebDbg.style.color="#fcd34d";
-      ebDbg.textContent=`finish:${cand.finishReason} | svar:${rawTxt.slice(0,150)||"(tomt)"}`;
-      // Extract JSON - try multiple strategies
-      let parsed;
+      // Extract JSON - try multiple strategies (uses outer 'parsed')
       const start=rawTxt.indexOf("{"), end=rawTxt.lastIndexOf("}");
       if(start!==-1&&end!==-1&&end>start){
         try{ parsed=JSON.parse(rawTxt.slice(start,end+1)); }catch{}
