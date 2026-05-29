@@ -154,6 +154,8 @@
           <button class="btn" id="btn-analyze" style="width:100%;padding:16px;font-size:15px;border:3px solid;opacity:0.4;">🤖 ANALYSER</button>
           <div style="font-size:13px;margin-top:10px;opacity:0.4;letter-spacing:1px;">Skriv navn og/eller last opp bilde — AI fyller inn kalorier</div>
         </div>
+        <!-- Error display -->
+        <div id="error-box" style="display:none;padding:14px;border:2px solid #ef4444;background:rgba(239,68,68,0.1);color:#fca5a5;font-size:13px;line-height:1.6;word-break:break-word;border-radius:2px;"></div>
       </div>
       <!-- Fixed confirm button at bottom -->
       <div style="padding:12px;border-top:3px solid #1a1a3a;flex-shrink:0;">
@@ -523,6 +525,7 @@ async function analyzeWithAI(){
   const key=state.provider==="claude"?state.apiKey:state.geminiKey;
   if(!key){showToast("Legg til API-nøkkel i innstillinger!",THEMES[state.themeId].danger);return;}
   el("btn-analyze").textContent="🤖 ANALYSERER...";el("btn-analyze").style.opacity="0.6";
+  const eb=el("error-box");if(eb){eb.style.display="none";eb.textContent="";}
   try{
     const prompt=state.addType==="food"
       ?`You are a calorie estimation API. Respond with ONLY a JSON object, nothing else, no explanation, no markdown. Format: {"name":"<norwegian name>","calories":<integer>}. Estimate calories for: ${name||"the food in the image"}.`
@@ -554,12 +557,15 @@ async function analyzeWithAI(){
       catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
       if(!res.ok){
         const err=await res.json().catch(()=>({}));
-        console.log("Gemini error full:", JSON.stringify(err));
-        const msg=err?.error?.message||`HTTP ${res.status}`;
+        const fullMsg=err?.error?.message||`HTTP ${res.status}`;
+        // Show full error in box for debugging
+        const eb=el("error-box");
+        eb.style.display="block";
+        eb.textContent=`[${res.status}] ${fullMsg}`;
         if(res.status===400)throw new Error("Ugyldig API-nøkkel");
         if(res.status===403)throw new Error("API-nøkkel mangler tilgang");
-        if(res.status===429)throw new Error(msg.slice(0,120));
-        throw new Error(msg);
+        if(res.status===429)throw new Error("Kvote/rate-grense nådd");
+        throw new Error(fullMsg);
       }
       const data=await res.json();
       if(data.error){throw new Error(data.error.message);}
