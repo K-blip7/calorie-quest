@@ -577,17 +577,20 @@ async function analyzeWithAI(){
       if(start!==-1&&end!==-1&&end>start){
         try{ parsed=JSON.parse(rawTxt.slice(start,end+1)); }catch{}
       }
-      if(!parsed||!parsed.name||parsed.calories===undefined){
+      if(!parsed||parsed.calories===undefined){
         const nameM=rawTxt.match(/"name"\s*:\s*"([^"]+)"/);
         const calM=rawTxt.match(/"calories"\s*:\s*(\d+)/);
-        if(nameM&&calM) parsed={name:nameM[1],calories:parseInt(calM[1])};
+        if(calM) parsed={name:nameM?nameM[1]:"",calories:parseInt(calM[1])};
       }
-      if(!parsed||!parsed.name||parsed.calories===undefined){
+      if(!parsed||parsed.calories===undefined){
         throw new Error(`Tolking feilet (finish:${cand.finishReason})`);
       }
     }
-    if(!parsed||!parsed.name||parsed.calories===undefined){throw new Error("Ugyldig svar fra AI");}
-    el("add-name").value=parsed.name;
+    if(!parsed||parsed.calories===undefined){throw new Error("Ugyldig svar fra AI");}
+    // Keep what the user typed. Only use AI's name if the field was empty (e.g. image-only analysis)
+    if(!el("add-name").value.trim() && parsed.name){
+      el("add-name").value=parsed.name;
+    }
     el("add-cal").value=String(Math.round(parsed.calories));
     updateAddConfirmBtn();showToast("✓ AI-analyse klar!");
   }catch(e){
