@@ -38,10 +38,10 @@
     .hp-seg{flex:1;height:100%;border:2px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.4);transition:all 0.4s;}
     /* Bottom nav */
     #bottom-nav{flex-shrink:0;display:flex;border-top:3px solid;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:10;background:#0a0a1fee;border-color:#1e1e3a;}
-    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px 14px;gap:4px;cursor:pointer;border:none;background:transparent;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;transition:all 0.2s;color:#444;-webkit-tap-highlight-color:transparent;position:relative;}
+    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px 14px;gap:4px;cursor:pointer;border:none;background:transparent;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;transition:all 0.2s;color:#8a8a9a;-webkit-tap-highlight-color:transparent;position:relative;}
     .nav-btn:active{transform:scale(0.92);}
-    .nav-btn .nav-icon{font-size:26px;line-height:1;transition:transform 0.2s;}
-    .nav-btn.active .nav-icon{transform:scale(1.15);}
+    .nav-btn .nav-icon{font-size:26px;line-height:1;transition:transform 0.2s;opacity:0.75;}
+    .nav-btn.active .nav-icon{transform:scale(1.15);opacity:1;}
     .nav-btn .nav-label{font-size:12px;transition:all 0.2s;}
     .nav-btn.active .nav-label{font-size:13px;}
     /* Active bar on top of nav button */
@@ -68,6 +68,10 @@
     @keyframes ember{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-120px);opacity:0}}
     @keyframes snowFall{0%{transform:translateY(-10px)}100%{transform:translateY(100vh) translateX(30px)}}
     .hero-wrap{animation:float 3.5s ease-in-out infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes analyzePulse{0%,100%{opacity:1}50%{opacity:0.5}}
+    .spinner{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:currentColor;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
+    .analyzing{animation:analyzePulse 1.2s ease-in-out infinite;}
   </style>
 </head>
 <body>
@@ -224,6 +228,8 @@
         </div>
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
+        <!-- Version -->
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v45</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -255,14 +261,15 @@
 </div><!-- /app -->
 
 <script>
-const TODAY = new Date().toISOString().split("T")[0];
-let state = { themeId:"fantasy", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null };
+const TODAY = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;})();
+let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null };
 
 const THEMES = {
   fantasy:{id:"fantasy",name:"Fantasy Kingdom",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#2a1f4a",panel:"#3d2d66dd",border:"#6d4baf",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
   space:{id:"space",name:"Space RPG",emoji:"🚀",primary:"#00cfff",secondary:"#a855f7",accent:"#00ff9d",danger:"#ff4d6d",bg:"#0e1d3d",panel:"#15294add",border:"#1d558f",text:"#e0f0ff",subtext:"#5b9cf6",hpColor:p=>p>50?"#00cfff":p>20?"#a855f7":"#ff4d6d",hpLabel:"⚡ ENERGY",foodLabel:"🍱 INTAKE",exLabel:"🔥 OUTPUT",btnFood:{bg:"linear-gradient(135deg,#020f1f,#0a2545)",border:"#1d4ed8",color:"#93c5fd"},btnEx:{bg:"linear-gradient(135deg,#0f0020,#1e0050)",border:"#7c3aed",color:"#c4b5fd"},btnLog:{bg:"linear-gradient(135deg,#001a0d,#003d1f)",border:"#065f46",color:"#6ee7b7"}},
   ocean:{id:"ocean",name:"Ocean Adventure",emoji:"🌊",primary:"#06b6d4",secondary:"#0ea5e9",accent:"#f59e0b",danger:"#f43f5e",bg:"#0a3a52",panel:"#0e4a66dd",border:"#1a6e8f",text:"#e0f8ff",subtext:"#38bcd4",hpColor:p=>p>50?"#06b6d4":p>20?"#f59e0b":"#f43f5e",hpLabel:"💧 HP",foodLabel:"🐟 SPIST",exLabel:"🌊 BRENT",btnFood:{bg:"linear-gradient(135deg,#042030,#073a55)",border:"#0e7490",color:"#67e8f9"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#d97706",color:"#fcd34d"},btnLog:{bg:"linear-gradient(135deg,#0a1a00,#183000)",border:"#15803d",color:"#86efac"}},
-  viking:{id:"viking",name:"Viking Norse",emoji:"🌋",primary:"#f97316",secondary:"#dc2626",accent:"#fbbf24",danger:"#dc2626",bg:"#3a2010",panel:"#4d2e15dd",border:"#a8481f",text:"#fef3c7",subtext:"#d4720a",hpColor:p=>p>50?"#f97316":p>20?"#fbbf24":"#dc2626",hpLabel:"🍺 MEAD",foodLabel:"🥩 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1a0800,#3d1800)",border:"#c2410c",color:"#fdba74"},btnEx:{bg:"linear-gradient(135deg,#1a0000,#3d0000)",border:"#991b1b",color:"#fca5a5"},btnLog:{bg:"linear-gradient(135deg,#1a1000,#3a2500)",border:"#a16207",color:"#fde68a"}}
+  viking:{id:"viking",name:"Viking Norse",emoji:"🌋",primary:"#f97316",secondary:"#dc2626",accent:"#fbbf24",danger:"#dc2626",bg:"#3a2010",panel:"#4d2e15dd",border:"#a8481f",text:"#fef3c7",subtext:"#d4720a",hpColor:p=>p>50?"#f97316":p>20?"#fbbf24":"#dc2626",hpLabel:"🍺 MEAD",foodLabel:"🥩 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1a0800,#3d1800)",border:"#c2410c",color:"#fdba74"},btnEx:{bg:"linear-gradient(135deg,#1a0000,#3d0000)",border:"#991b1b",color:"#fca5a5"},btnLog:{bg:"linear-gradient(135deg,#1a1000,#3a2500)",border:"#a16207",color:"#fde68a"}},
+  light:{id:"light",name:"Lyst",emoji:"☀️",primary:"#16a34a",secondary:"#0891b2",accent:"#ea580c",danger:"#dc2626",bg:"#f1f5f9",panel:"#ffffffee",border:"#cbd5e1",text:"#1e293b",subtext:"#64748b",hpColor:p=>p>50?"#16a34a":p>20?"#ea580c":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍎 SPIST",exLabel:"⚡ BRENT",btnFood:{bg:"linear-gradient(135deg,#dcfce7,#bbf7d0)",border:"#16a34a",color:"#15803d"},btnEx:{bg:"linear-gradient(135deg,#ffedd5,#fed7aa)",border:"#ea580c",color:"#c2410c"},btnLog:{bg:"linear-gradient(135deg,#e0f2fe,#bae6fd)",border:"#0891b2",color:"#0e7490"}}
 };
 
 const QUESTS = [
@@ -279,7 +286,7 @@ function getBurned(){return state.log.filter(e=>e.type==="exercise").reduce((s,e
 function getRemaining(){return state.budget-getUsed()+getBurned()}
 
 function loadAll(){
-  state.themeId=load("cq_theme","fantasy");
+  state.themeId=load("cq_theme","auto");
   state.budget=load("cq_budget",2000);
   state.apiKey=load("cq_apikey","");
   state.geminiKey=load("cq_geminikey","");
@@ -290,6 +297,27 @@ function loadAll(){
 }
 function saveDay(){save("cq_day",{date:TODAY,log:state.log})}
 
+// Resolve a theme id to an actual theme. "auto" follows the OS color scheme.
+function resolveTheme(id){
+  if(id==="auto"){
+    const darkPref=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return darkPref?THEMES.space:THEMES.light;
+  }
+  return THEMES[id]||THEMES.fantasy;
+}
+
+function buildLightBg(){
+  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#f8fafc 0%,#eef2f7 50%,#e8eef4 100%);"></div>`;
+  // Soft floating circles for a calm, airy feel
+  for(let i=0;i<5;i++){
+    const c=["rgba(22,163,74,0.06)","rgba(8,145,178,0.06)","rgba(234,88,12,0.05)"][i%3];
+    const sz=80+i*30;
+    h+=`<div style="position:absolute;top:${(i*23+8)%80}%;left:${(i*31+5)%85}%;width:${sz}px;height:${sz}px;border-radius:50%;background:${c};animation:float ${5+i*1.5}s ${i*0.6}s ease-in-out infinite;"></div>`;
+  }
+  // Gentle drifting clouds
+  for(let i=0;i<3;i++) h+=`<div style="position:absolute;top:${15+i*22}%;width:${90+i*25}px;height:${24+i*6}px;border-radius:20px;background:rgba(255,255,255,0.6);animation:cloudDrift ${22+i*8}s ${i*5}s linear infinite;"></div>`;
+  return h;
+}
 function buildFantasyBg(){
   let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#2a1f4a 0%,#382862 40%,#241a44 100%);"></div>`;
   h+=`<div style="position:absolute;top:30px;right:40px;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,#fffde0 60%,#ffd700 100%);box-shadow:0 0 30px #ffd70080;animation:moonGlow 4s ease-in-out infinite;"></div>`;
@@ -375,14 +403,14 @@ function heroSVG(mood,th,questsDone){
 
 let toastTimer=null;
 function showToast(msg,color){
-  const th=THEMES[state.themeId];color=color||th.primary;
+  const th=resolveTheme(state.themeId);color=color||th.primary;
   const t=el("toast");t.textContent=msg;t.style.background=th.panel;t.style.borderColor=color;t.style.color=color;t.style.boxShadow=`0 0 24px ${color}50`;t.classList.add("show");
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2500);
 }
 
 function applyTheme(th){
   document.body.style.background=th.bg;document.body.style.color=th.text;
-  const bgs={fantasy:buildFantasyBg,space:buildSpaceBg,ocean:buildOceanBg,viking:buildVikingBg};
+  const bgs={fantasy:buildFantasyBg,space:buildSpaceBg,ocean:buildOceanBg,viking:buildVikingBg,light:buildLightBg};
   el("bg").innerHTML=bgs[th.id]();
   el("main-title")&&(el("main-title").textContent=`${th.emoji} CALORIE QUEST`);
   el("hero-panel").style.background=th.panel;el("hero-panel").style.borderColor=th.border;
@@ -393,7 +421,7 @@ function applyTheme(th){
   el("quickadd-panel").style.background=th.panel;el("quickadd-panel").style.borderColor=th.border;
   // Bottom nav
   const nav=el("bottom-nav");nav.style.background=th.panel;nav.style.borderColor=th.border;
-  document.querySelectorAll(".nav-btn").forEach(b=>{b.style.color="#444";});
+  document.querySelectorAll(".nav-btn").forEach(b=>{b.style.color="#8a8a9a";});
   const activeNav=el({main:"nav-home",add:"nav-add",log:"nav-log",settings:"nav-settings"}[state.screen]||"nav-home");
   if(activeNav)activeNav.style.color=th.primary;
   ["budget-card","api-card","theme-card","streak-card"].forEach(id=>{const c=el(id);if(c){c.style.background=th.panel;c.style.borderColor=th.border;}});
@@ -402,7 +430,7 @@ function applyTheme(th){
 }
 
 function renderMain(){
-  const th=THEMES[state.themeId],used=getUsed(),burned=getBurned(),remaining=getRemaining();
+  const th=resolveTheme(state.themeId),used=getUsed(),burned=getBurned(),remaining=getRemaining();
   const pct=Math.max(0,Math.min(100,(remaining/state.budget)*100));
   const hpColor=th.hpColor(pct);
   const mood=remaining>state.budget*0.5?"happy":remaining>0?"neutral":"sad";
@@ -481,7 +509,7 @@ function renderMain(){
 }
 
 function renderLog(){
-  const th=THEMES[state.themeId],list=el("log-list"),empty=el("log-empty");
+  const th=resolveTheme(state.themeId),list=el("log-list"),empty=el("log-empty");
   list.innerHTML="";
   if(!state.log.length){empty.style.display="flex";return;}
   empty.style.display="none";
@@ -497,19 +525,30 @@ function renderLog(){
 }
 
 function renderThemePicker(){
-  const th=THEMES[state.themeId],list=el("theme-list");list.innerHTML="";
-  Object.values(THEMES).forEach(t=>{
+  const th=resolveTheme(state.themeId),list=el("theme-list");list.innerHTML="";
+  // Build list: Auto first, then Light, then the dark themes
+  const autoCard={id:"auto",name:"Auto (følg telefon)",emoji:"📱",isAuto:true};
+  const order=["light","fantasy","space","ocean","viking"];
+  const cards=[autoCard, ...order.map(id=>THEMES[id]).filter(Boolean)];
+  cards.forEach(t=>{
     const active=t.id===state.themeId;
     const btn=document.createElement("button");btn.className="btn";
-    btn.style.cssText=`padding:18px 16px;display:flex;align-items:center;gap:16px;background:${active?t.primary+"18":"rgba(0,0,0,0.3)"};border:3px solid ${active?t.primary:t.border};color:${active?t.primary:th.text};box-shadow:${active?`0 0 16px ${t.primary}40`:""};width:100%;text-align:left;`;
-    btn.innerHTML=`<div style="width:50px;height:50px;flex-shrink:0;background:${t.bg};border:2px solid ${t.border};display:flex;align-items:center;justify-content:center;font-size:26px;">${t.emoji}</div><div style="flex:1;"><div style="font-size:16px;color:${active?t.primary:th.text};margin-bottom:6px;font-weight:700;">${t.name}</div><div style="display:flex;gap:6px;">${[t.primary,t.secondary,t.accent,t.danger].map(c=>`<div style="width:14px;height:14px;border-radius:50%;background:${c};box-shadow:0 0 4px ${c};"></div>`).join("")}</div></div>${active?"<div style='font-size:18px;'>✓</div>":""}`;
-    btn.addEventListener("click",()=>{state.themeId=t.id;applyTheme(THEMES[t.id]);renderMain();renderThemePicker();renderLog();});
+    if(t.isAuto){
+      // Auto card: show a half-light/half-dark swatch and follow-OS label
+      const resolved=resolveTheme("auto");
+      btn.style.cssText=`padding:18px 16px;display:flex;align-items:center;gap:16px;background:${active?th.primary+"18":"rgba(128,128,128,0.12)"};border:3px solid ${active?th.primary:th.border};color:${active?th.primary:th.text};box-shadow:${active?`0 0 16px ${th.primary}40`:""};width:100%;text-align:left;`;
+      btn.innerHTML=`<div style="width:50px;height:50px;flex-shrink:0;background:linear-gradient(135deg,#f1f5f9 50%,#0e1d3d 50%);border:2px solid ${th.border};display:flex;align-items:center;justify-content:center;font-size:26px;">📱</div><div style="flex:1;"><div style="font-size:16px;color:${active?th.primary:th.text};margin-bottom:6px;font-weight:700;">${t.name}</div><div style="font-size:13px;opacity:0.6;">Nå: ${resolved.emoji} ${resolved.name}</div></div>${active?"<div style='font-size:18px;'>✓</div>":""}`;
+    } else {
+      btn.style.cssText=`padding:18px 16px;display:flex;align-items:center;gap:16px;background:${active?t.primary+"18":"rgba(128,128,128,0.12)"};border:3px solid ${active?t.primary:t.border};color:${active?t.primary:th.text};box-shadow:${active?`0 0 16px ${t.primary}40`:""};width:100%;text-align:left;`;
+      btn.innerHTML=`<div style="width:50px;height:50px;flex-shrink:0;background:${t.bg};border:2px solid ${t.border};display:flex;align-items:center;justify-content:center;font-size:26px;">${t.emoji}</div><div style="flex:1;"><div style="font-size:16px;color:${active?t.primary:th.text};margin-bottom:6px;font-weight:700;">${t.name}</div><div style="display:flex;gap:6px;">${[t.primary,t.secondary,t.accent,t.danger].map(c=>`<div style="width:14px;height:14px;border-radius:50%;background:${c};box-shadow:0 0 4px ${c};"></div>`).join("")}</div></div>${active?"<div style='font-size:18px;'>✓</div>":""}`;
+    }
+    btn.addEventListener("click",()=>{state.themeId=t.id;applyTheme(resolveTheme(t.id));renderMain();renderThemePicker();renderLog();});
     list.appendChild(btn);
   });
 }
 
 function openEditModal(entry){
-  const th=THEMES[state.themeId];let modal=document.getElementById("edit-modal");if(modal)modal.remove();
+  const th=resolveTheme(state.themeId);let modal=document.getElementById("edit-modal");if(modal)modal.remove();
   modal=document.createElement("div");modal.id="edit-modal";
   modal.style.cssText=`position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;`;
   const calColor=entry.type==="food"?th.danger:th.accent;
@@ -526,8 +565,8 @@ function navTo(name){
   el("screen-"+name).classList.add("active");
   state.screen=name;
   const map={main:"nav-home",add:"nav-add",log:"nav-log",settings:"nav-settings"};
-  const th=THEMES[state.themeId];
-  document.querySelectorAll(".nav-btn").forEach(b=>{b.classList.remove("active");b.style.color="#444";});
+  const th=resolveTheme(state.themeId);
+  document.querySelectorAll(".nav-btn").forEach(b=>{b.classList.remove("active");b.style.color="#8a8a9a";});
   const active=el(map[name]);
   if(active){active.classList.add("active");active.style.color=th.primary;}
   el("nav-log-label").textContent=`LOGG${state.log.length?` (${state.log.length})`:""}`;
@@ -541,16 +580,16 @@ function resetAddScreen(){
 
 function switchAddType(type){
   state.addType=type;
-  const th=THEMES[state.themeId];
+  const th=resolveTheme(state.themeId);
   const foodActive=type==="food";
   const fBtn=el("tog-food"),eBtn=el("tog-ex");
   // Food button
   fBtn.style.background=foodActive?th.btnFood.bg:"rgba(0,0,0,0.3)";
-  fBtn.style.color=foodActive?th.btnFood.color:"#444";
+  fBtn.style.color=foodActive?th.btnFood.color:"#8a8a9a";
   fBtn.style.borderRight=`2px solid ${th.border}`;
   // Ex button
   eBtn.style.background=!foodActive?th.btnEx.bg:"rgba(0,0,0,0.3)";
-  eBtn.style.color=!foodActive?th.btnEx.color:"#444";
+  eBtn.style.color=!foodActive?th.btnEx.color:"#8a8a9a";
   // Toggle border
   el("type-toggle").style.borderColor=foodActive?th.btnFood.border:th.btnEx.border;
   // Update fields
@@ -564,7 +603,7 @@ function switchAddType(type){
 }
 
 function updateAddConfirmBtn(){
-  const th=THEMES[state.themeId],type=state.addType,accent=type==="food"?th.btnFood:th.btnEx;
+  const th=resolveTheme(state.themeId),type=state.addType,accent=type==="food"?th.btnFood:th.btnEx;
   const ok=el("add-name").value.trim()&&el("add-cal").value;
   const btn=el("btn-add-confirm");
   btn.style.background=ok?accent.bg:"transparent";btn.style.color=ok?accent.color:th.subtext;btn.style.borderColor=ok?accent.border:th.border;btn.style.boxShadow=ok?`0 0 24px ${accent.border}60`:"none";btn.style.opacity=ok?"1":"0.3";btn.style.cursor=ok?"pointer":"not-allowed";
@@ -573,7 +612,7 @@ function updateAddConfirmBtn(){
 
 function setProvider(p){
   state.provider=p;
-  const th=THEMES[state.themeId];
+  const th=resolveTheme(state.themeId);
   const active={border:"#a855f7",bg:"rgba(168,85,247,0.15)",color:"#c4b5fd"};
   const inactive={border:"#333",bg:"transparent",color:"#666"};
   const cp=el("btn-provider-claude"),gp=el("btn-provider-gemini");
@@ -584,8 +623,13 @@ function setProvider(p){
 async function analyzeWithAI(){
   const name=el("add-name").value;if(!name&&!state.imageFile)return;
   const key=state.provider==="claude"?state.apiKey:state.geminiKey;
-  if(!key){showToast("Legg til API-nøkkel i innstillinger!",THEMES[state.themeId].danger);return;}
-  el("btn-analyze").textContent="🤖 ANALYSERER...";el("btn-analyze").style.opacity="0.6";
+  if(!key){showToast("Legg til API-nøkkel i innstillinger!",resolveTheme(state.themeId).danger);return;}
+  const ab=el("btn-analyze");
+  ab.innerHTML=`<span class="spinner"></span>ANALYSERER...`;
+  ab.classList.add("analyzing");
+  ab.style.opacity="0.85";
+  ab.style.pointerEvents="none";
+  el("btn-pick-img").style.opacity="0.4";el("btn-pick-camera").style.opacity="0.4";
   const eb=el("error-box");if(eb){eb.style.display="none";eb.textContent="";}
   try{
     const prompt=state.addType==="food"
@@ -656,14 +700,21 @@ async function analyzeWithAI(){
     updateAddConfirmBtn();showToast("✓ AI-analyse klar!");
   }catch(e){
     console.error("AI error:",e);
-    showToast("Analyse feilet: "+e.message.slice(0,40),THEMES[state.themeId].danger);
+    showToast("Analyse feilet: "+e.message.slice(0,40),resolveTheme(state.themeId).danger);
   }
-  el("btn-analyze").textContent="🤖 ANALYSER";updateAddConfirmBtn();
+  // Restore button + image buttons
+  const ab2=el("btn-analyze");
+  ab2.textContent="🤖 ANALYSER";
+  ab2.classList.remove("analyzing");
+  ab2.style.opacity="1";
+  ab2.style.pointerEvents="auto";
+  el("btn-pick-img").style.opacity="1";el("btn-pick-camera").style.opacity="1";
+  updateAddConfirmBtn();
 }
 
 function init(){
   loadAll();
-  const th=THEMES[state.themeId];applyTheme(th);renderMain();renderThemePicker();
+  const th=resolveTheme(state.themeId);applyTheme(th);renderMain();renderThemePicker();
   el("settings-budget").value=state.budget;el("settings-api").value=state.apiKey;el("settings-gemini").value=state.geminiKey;
   setProvider(state.provider);
   if(state.streak>0){el("streak-card").style.display="block";el("streak-info").textContent=`🔥 ${state.streak} dager på rad`;}
@@ -672,14 +723,14 @@ function init(){
   el("add-cal").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");updateAddConfirmBtn();});
   el("btn-pick-img").addEventListener("click",()=>el("file-input").click());
   el("btn-pick-camera").addEventListener("click",()=>el("file-input-camera").click());
-  el("file-input").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);});
-  el("file-input-camera").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);});
+  el("file-input").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;el("add-name").value="";el("add-cal").value="";const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);e.target.value="";});
+  el("file-input-camera").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;el("add-name").value="";el("add-cal").value="";const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);e.target.value="";});
   el("btn-remove-img").addEventListener("click",()=>{state.imageFile=null;el("img-preview-wrap").style.display="none";el("file-input").value="";updateAddConfirmBtn();});
   el("btn-analyze").addEventListener("click",analyzeWithAI);
   el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");});
   el("settings-budget").addEventListener("focus",e=>e.target.select());
   el("settings-budget").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
-  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);applyTheme(THEMES[state.themeId]);renderMain();navTo("main");showToast("⚙ LAGRET!");});
+  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
   // (A) Reset day button
   el("btn-reset-day").addEventListener("click",()=>{
     if(state.log.length===0){showToast("Loggen er allerede tom");return;}
@@ -689,6 +740,28 @@ function init(){
   });
   // Init nav
   navTo("main");
+
+  // Check for day change when app regains focus (e.g. opened next morning)
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState==="visible"){
+      const d=new Date();
+      const nowDate=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+      const saved=load("cq_day",null);
+      if(saved&&saved.date!==nowDate){
+        // New day - reload to reset cleanly
+        location.reload();
+      }
+    }
+  });
+
+  // Live-update when OS switches light/dark, if user is on Auto theme
+  if(window.matchMedia){
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{
+      if(state.themeId==="auto"){
+        applyTheme(resolveTheme("auto"));renderMain();renderThemePicker();renderLog();
+      }
+    });
+  }
 }
 
 document.addEventListener("DOMContentLoaded",init);
