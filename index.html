@@ -29,7 +29,7 @@
     #app-content{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;}
     .btn{cursor:pointer;border:none;font-family:'Rajdhani',sans-serif;font-weight:700;transition:transform 0.08s,filter 0.1s;user-select:none;letter-spacing:1px;}
     .btn:active{transform:scale(0.93);filter:brightness(0.75);}
-    input{font-family:'Rajdhani',sans-serif;font-weight:600;outline:none;border-radius:0;background:#0a0a1f;color:#e0e0e0;border:3px solid #1e1e3a;padding:14px;font-size:16px;width:100%;}
+    input{font-family:'Rajdhani',sans-serif;font-weight:600;outline:none;border-radius:0;background:var(--inp-bg,#0a0a1f);color:var(--inp-text,#e0e0e0);border:3px solid var(--inp-border,#1e1e3a);padding:14px;font-size:16px;width:100%;}
     input:focus{border-color:#00ff9d;box-shadow:0 0 10px rgba(0,255,157,0.2);}
     input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     .panel{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
@@ -229,7 +229,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v48</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v49</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -410,6 +410,20 @@ function showToast(msg,color){
 
 function applyTheme(th){
   document.body.style.background=th.bg;document.body.style.color=th.text;
+  // Theme-aware input colors: light theme uses light inputs, dark themes use dark inputs
+  const isLight=th.id==="light";
+  const inpBg=isLight?"#ffffff":"#0a0a1f";
+  const inpText=isLight?"#1e293b":"#e0e0e0";
+  const inpBorder=isLight?"#cbd5e1":"#1e1e3a";
+  const dashBg=isLight?"#f8fafc":"#0a0a1f";
+  document.documentElement.style.setProperty("--inp-bg",inpBg);
+  document.documentElement.style.setProperty("--inp-text",inpText);
+  document.documentElement.style.setProperty("--inp-border",inpBorder);
+  // Update image preview border, camera/album buttons, remove-img button, toggle border
+  const ip=el("img-preview");if(ip)ip.style.borderColor=inpBorder;
+  ["btn-pick-camera","btn-pick-img"].forEach(id=>{const b=el(id);if(b){b.style.background=dashBg;b.style.borderColor=inpBorder;b.style.color=th.subtext;}});
+  const ri=el("btn-remove-img");if(ri)ri.style.background=inpBg;
+  const tt=el("type-toggle");if(tt)tt.style.borderColor=inpBorder;
   const bgs={fantasy:buildFantasyBg,space:buildSpaceBg,ocean:buildOceanBg,viking:buildVikingBg,light:buildLightBg};
   el("bg").innerHTML=bgs[th.id]();
   el("main-title")&&(el("main-title").textContent=`${th.emoji} CALORIE QUEST`);
