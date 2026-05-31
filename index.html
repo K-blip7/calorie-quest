@@ -229,7 +229,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v45</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v48</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -242,7 +242,7 @@
   <div id="bottom-nav">
     <button class="nav-btn active" id="nav-home" onclick="navTo('main')">
       <span class="nav-icon">🏠</span>
-      <span class="nav-label">HOME</span>
+      <span class="nav-label">HJEM</span>
     </button>
     <button class="nav-btn" id="nav-add" onclick="navTo('add')">
       <span class="nav-icon">✚</span>
@@ -265,15 +265,15 @@ const TODAY = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.get
 let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null };
 
 const THEMES = {
-  fantasy:{id:"fantasy",name:"Fantasy Kingdom",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#2a1f4a",panel:"#3d2d66dd",border:"#6d4baf",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
-  space:{id:"space",name:"Space RPG",emoji:"🚀",primary:"#00cfff",secondary:"#a855f7",accent:"#00ff9d",danger:"#ff4d6d",bg:"#0e1d3d",panel:"#15294add",border:"#1d558f",text:"#e0f0ff",subtext:"#5b9cf6",hpColor:p=>p>50?"#00cfff":p>20?"#a855f7":"#ff4d6d",hpLabel:"⚡ ENERGY",foodLabel:"🍱 INTAKE",exLabel:"🔥 OUTPUT",btnFood:{bg:"linear-gradient(135deg,#020f1f,#0a2545)",border:"#1d4ed8",color:"#93c5fd"},btnEx:{bg:"linear-gradient(135deg,#0f0020,#1e0050)",border:"#7c3aed",color:"#c4b5fd"},btnLog:{bg:"linear-gradient(135deg,#001a0d,#003d1f)",border:"#065f46",color:"#6ee7b7"}},
-  ocean:{id:"ocean",name:"Ocean Adventure",emoji:"🌊",primary:"#06b6d4",secondary:"#0ea5e9",accent:"#f59e0b",danger:"#f43f5e",bg:"#0a3a52",panel:"#0e4a66dd",border:"#1a6e8f",text:"#e0f8ff",subtext:"#38bcd4",hpColor:p=>p>50?"#06b6d4":p>20?"#f59e0b":"#f43f5e",hpLabel:"💧 HP",foodLabel:"🐟 SPIST",exLabel:"🌊 BRENT",btnFood:{bg:"linear-gradient(135deg,#042030,#073a55)",border:"#0e7490",color:"#67e8f9"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#d97706",color:"#fcd34d"},btnLog:{bg:"linear-gradient(135deg,#0a1a00,#183000)",border:"#15803d",color:"#86efac"}},
-  viking:{id:"viking",name:"Viking Norse",emoji:"🌋",primary:"#f97316",secondary:"#dc2626",accent:"#fbbf24",danger:"#dc2626",bg:"#3a2010",panel:"#4d2e15dd",border:"#a8481f",text:"#fef3c7",subtext:"#d4720a",hpColor:p=>p>50?"#f97316":p>20?"#fbbf24":"#dc2626",hpLabel:"🍺 MEAD",foodLabel:"🥩 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1a0800,#3d1800)",border:"#c2410c",color:"#fdba74"},btnEx:{bg:"linear-gradient(135deg,#1a0000,#3d0000)",border:"#991b1b",color:"#fca5a5"},btnLog:{bg:"linear-gradient(135deg,#1a1000,#3a2500)",border:"#a16207",color:"#fde68a"}},
+  fantasy:{id:"fantasy",name:"Eventyrrike",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#2a1f4a",panel:"#3d2d66dd",border:"#6d4baf",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
+  space:{id:"space",name:"Verdensrommet",emoji:"🚀",primary:"#00cfff",secondary:"#a855f7",accent:"#00ff9d",danger:"#ff4d6d",bg:"#0e1d3d",panel:"#15294add",border:"#1d558f",text:"#e0f0ff",subtext:"#5b9cf6",hpColor:p=>p>50?"#00cfff":p>20?"#a855f7":"#ff4d6d",hpLabel:"⚡ ENERGI",foodLabel:"🍱 SPIST",exLabel:"🔥 BRENT",btnFood:{bg:"linear-gradient(135deg,#020f1f,#0a2545)",border:"#1d4ed8",color:"#93c5fd"},btnEx:{bg:"linear-gradient(135deg,#0f0020,#1e0050)",border:"#7c3aed",color:"#c4b5fd"},btnLog:{bg:"linear-gradient(135deg,#001a0d,#003d1f)",border:"#065f46",color:"#6ee7b7"}},
+  ocean:{id:"ocean",name:"Havdyp",emoji:"🌊",primary:"#06b6d4",secondary:"#0ea5e9",accent:"#f59e0b",danger:"#f43f5e",bg:"#0a3a52",panel:"#0e4a66dd",border:"#1a6e8f",text:"#e0f8ff",subtext:"#38bcd4",hpColor:p=>p>50?"#06b6d4":p>20?"#f59e0b":"#f43f5e",hpLabel:"💧 HP",foodLabel:"🐟 SPIST",exLabel:"🌊 BRENT",btnFood:{bg:"linear-gradient(135deg,#042030,#073a55)",border:"#0e7490",color:"#67e8f9"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#d97706",color:"#fcd34d"},btnLog:{bg:"linear-gradient(135deg,#0a1a00,#183000)",border:"#15803d",color:"#86efac"}},
+  viking:{id:"viking",name:"Vikingtid",emoji:"🌋",primary:"#f97316",secondary:"#dc2626",accent:"#fbbf24",danger:"#dc2626",bg:"#3a2010",panel:"#4d2e15dd",border:"#a8481f",text:"#fef3c7",subtext:"#d4720a",hpColor:p=>p>50?"#f97316":p>20?"#fbbf24":"#dc2626",hpLabel:"🍺 MJØD",foodLabel:"🥩 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1a0800,#3d1800)",border:"#c2410c",color:"#fdba74"},btnEx:{bg:"linear-gradient(135deg,#1a0000,#3d0000)",border:"#991b1b",color:"#fca5a5"},btnLog:{bg:"linear-gradient(135deg,#1a1000,#3a2500)",border:"#a16207",color:"#fde68a"}},
   light:{id:"light",name:"Lyst",emoji:"☀️",primary:"#16a34a",secondary:"#0891b2",accent:"#ea580c",danger:"#dc2626",bg:"#f1f5f9",panel:"#ffffffee",border:"#cbd5e1",text:"#1e293b",subtext:"#64748b",hpColor:p=>p>50?"#16a34a":p>20?"#ea580c":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍎 SPIST",exLabel:"⚡ BRENT",btnFood:{bg:"linear-gradient(135deg,#dcfce7,#bbf7d0)",border:"#16a34a",color:"#15803d"},btnEx:{bg:"linear-gradient(135deg,#ffedd5,#fed7aa)",border:"#ea580c",color:"#c2410c"},btnLog:{bg:"linear-gradient(135deg,#e0f2fe,#bae6fd)",border:"#0891b2",color:"#0e7490"}}
 };
 
 const QUESTS = [
-  {id:"log3",icon:"🍽",label:"Log 3 måltider",check:log=>log.filter(e=>e.type==="food").length>=3},
+  {id:"log3",icon:"🍽",label:"Logg 3 måltider",check:log=>log.filter(e=>e.type==="food").length>=3},
   {id:"train",icon:"⚡",label:"Tren én gang",check:log=>log.some(e=>e.type==="exercise")},
   {id:"budget",icon:"🛡",label:"Hold budsjettet",check:(log,rem)=>rem>=0}
 ];
