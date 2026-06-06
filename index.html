@@ -84,6 +84,13 @@
     <div id="screen-main" class="screen active">
       <div class="scroll">
         <div id="date-header" style="text-align:center;padding:14px 12px 0;font-size:15px;letter-spacing:1px;opacity:0.6;"></div>
+        <div id="coach-card" class="panel" style="margin:12px 12px 0;padding:16px 18px;border:3px solid;border-radius:4px;display:flex;gap:14px;align-items:flex-start;">
+          <div style="font-size:28px;flex-shrink:0;line-height:1.2;">🐰</div>
+          <div style="flex:1;min-width:0;">
+            <div id="coach-text" style="font-size:15px;line-height:1.5;"></div>
+          </div>
+          <button class="btn" id="btn-coach-refresh" style="flex-shrink:0;width:36px;height:36px;font-size:16px;background:transparent;border:2px solid;display:flex;align-items:center;justify-content:center;">🔄</button>
+        </div>
         <div id="hero-panel" class="panel" style="margin:12px 12px 0;padding:18px;display:flex;gap:18px;align-items:flex-start;border:3px solid;border-radius:4px;">
           <div style="width:130px;height:170px;flex-shrink:0;position:relative;" class="hero-wrap">
             <div id="hero-glow" style="position:absolute;inset:0;"></div>
@@ -193,6 +200,41 @@
           <input id="settings-budget" type="text" inputmode="numeric" style="font-size:28px;text-align:center;padding:16px;letter-spacing:2px;font-weight:700;border-color:rgba(255,215,0,0.4);color:#ffd700;"/>
           <div style="font-size:14px;margin-top:10px;text-align:center;opacity:0.3;letter-spacing:1px;">KCAL PER DAG</div>
         </div>
+        <!-- Om meg (profile for AI coach) -->
+        <div id="profile-card" class="panel" style="padding:20px;border:3px solid;">
+          <div style="font-size:16px;letter-spacing:1px;margin-bottom:6px;opacity:0.5;">👤 OM MEG</div>
+          <div style="font-size:12px;opacity:0.4;margin-bottom:16px;line-height:1.5;">Valgfritt – gjør AI-rådene mer personlige. Lagres kun lokalt.</div>
+          <div style="display:flex;gap:10px;margin-bottom:12px;">
+            <div style="flex:1;">
+              <div style="font-size:13px;opacity:0.5;margin-bottom:6px;">ALDER</div>
+              <input id="settings-age" type="text" inputmode="numeric" placeholder="—" style="font-size:16px;padding:12px;text-align:center;"/>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:13px;opacity:0.5;margin-bottom:6px;">VEKT (KG)</div>
+              <input id="settings-weight" type="text" inputmode="numeric" placeholder="—" style="font-size:16px;padding:12px;text-align:center;"/>
+            </div>
+          </div>
+          <div style="font-size:13px;opacity:0.5;margin-bottom:6px;">KJØNN</div>
+          <div id="gender-toggle" style="display:flex;gap:8px;margin-bottom:12px;">
+            <button class="btn gender-btn" data-val="kvinne" style="flex:1;padding:12px;font-size:14px;border:2px solid;">Kvinne</button>
+            <button class="btn gender-btn" data-val="mann" style="flex:1;padding:12px;font-size:14px;border:2px solid;">Mann</button>
+            <button class="btn gender-btn" data-val="annet" style="flex:1;padding:12px;font-size:14px;border:2px solid;">Annet</button>
+          </div>
+          <div style="font-size:13px;opacity:0.5;margin-bottom:6px;">MÅL</div>
+          <div id="goal-toggle" style="display:flex;gap:8px;margin-bottom:12px;">
+            <button class="btn goal-btn" data-val="ned" style="flex:1;padding:12px;font-size:13px;border:2px solid;">⬇ Ned</button>
+            <button class="btn goal-btn" data-val="hold" style="flex:1;padding:12px;font-size:13px;border:2px solid;">➡ Holde</button>
+            <button class="btn goal-btn" data-val="opp" style="flex:1;padding:12px;font-size:13px;border:2px solid;">⬆ Opp</button>
+          </div>
+          <div style="font-size:13px;opacity:0.5;margin-bottom:6px;">AKTIVITETSNIVÅ</div>
+          <div id="activity-toggle" style="display:flex;gap:8px;margin-bottom:12px;">
+            <button class="btn activity-btn" data-val="lav" style="flex:1;padding:12px;font-size:13px;border:2px solid;">Lav</button>
+            <button class="btn activity-btn" data-val="moderat" style="flex:1;padding:12px;font-size:13px;border:2px solid;">Moderat</button>
+            <button class="btn activity-btn" data-val="høy" style="flex:1;padding:12px;font-size:13px;border:2px solid;">Høy</button>
+          </div>
+          <div style="font-size:13px;opacity:0.5;margin-bottom:6px;">NOTATER / PREFERANSER</div>
+          <input id="settings-notes" type="text" placeholder="f.eks. vegetarianer, trener til maraton" style="font-size:14px;padding:12px;"/>
+        </div>
         <!-- 2. Theme -->
         <div id="theme-card" class="panel" style="padding:20px;border:3px solid;">
           <div style="font-size:16px;letter-spacing:1px;margin-bottom:16px;opacity:0.5;">🎨 VELG TEMA</div>
@@ -229,7 +271,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v50</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v52</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -262,7 +304,7 @@
 
 <script>
 const TODAY = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;})();
-let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null };
+let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null, profile:{age:"",weight:"",gender:"",goal:"",activity:"",notes:""}, coachText:"", coachLoading:false };
 
 const THEMES = {
   fantasy:{id:"fantasy",name:"Eventyrrike",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#2a1f4a",panel:"#3d2d66dd",border:"#6d4baf",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
@@ -291,6 +333,7 @@ function loadAll(){
   state.apiKey=load("cq_apikey","");
   state.geminiKey=load("cq_geminikey","");
   state.provider=load("cq_provider","claude");
+  state.profile=load("cq_profile",{age:"",weight:"",gender:"",goal:"",activity:"",notes:""});
   state.streak=load("cq_streak",0);
   const day=load("cq_day",null);
   state.log=(day&&day.date===TODAY)?day.log:[];
@@ -428,6 +471,9 @@ function applyTheme(th){
   el("bg").innerHTML=bgs[th.id]();
   el("main-title")&&(el("main-title").textContent=`${th.emoji} CALORIE QUEST`);
   el("hero-panel").style.background=th.panel;el("hero-panel").style.borderColor=th.border;
+  const cc=el("coach-card");if(cc){cc.style.background=th.panel;cc.style.borderColor=th.secondary+"80";}
+  const cr=el("btn-coach-refresh");if(cr){cr.style.borderColor=th.secondary;cr.style.color=th.secondary;}
+  const ctx=el("coach-text");if(ctx)ctx.style.color=th.text;
   el("stat-food").style.background=th.panel;el("stat-food").style.borderColor=th.border;el("stat-food-label").style.color=th.subtext;el("stat-food-label").textContent=th.foodLabel;
   el("stat-ex").style.background=th.panel;el("stat-ex").style.borderColor=th.border;el("stat-ex-label").style.color=th.subtext;el("stat-ex-label").textContent=th.exLabel;
   el("remaining-panel").style.background=th.panel;el("remaining-panel").style.borderColor=th.border;
@@ -499,7 +545,7 @@ function renderMain(){
       chip.textContent=`+ ${item.name} (${item.calories})`;
       chip.addEventListener("click",()=>{
         state.log.push({id:Date.now(),name:item.name,calories:item.calories,type:"food"});
-        saveDay();renderMain();showToast("✓ LAGT TIL!");
+        saveDay();renderMain();showToast("✓ LAGT TIL!");generateCoachAdvice(true);
       });
       qlist.appendChild(chip);
     });
@@ -534,7 +580,7 @@ function renderLog(){
     card.innerHTML=`<div style="width:48px;height:48px;flex-shrink:0;background:${btn.bg};border:3px solid ${btn.border};display:flex;align-items:center;justify-content:center;font-size:24px;">${icon}</div><div style="flex:1;"><div style="font-size:15px;margin-bottom:6px;line-height:1.5;color:${th.text};">${entry.name}</div><div style="font-size:18px;font-weight:700;color:${calColor};text-shadow:0 0 8px ${calColor}60;">${sign}${entry.calories} kcal</div></div><div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;"><button class="btn edit-btn" data-id="${entry.id}" style="width:44px;height:44px;font-size:18px;background:${th.panel};border:2px solid ${th.primary}60;color:${th.primary};display:flex;align-items:center;justify-content:center;">✏️</button><button class="btn del-btn" data-id="${entry.id}" style="width:44px;height:44px;font-size:18px;background:${th.panel};border:2px solid ${th.danger}60;color:${th.danger};display:flex;align-items:center;justify-content:center;">🗑</button></div>`;
     list.appendChild(card);
   });
-  list.querySelectorAll(".del-btn").forEach(b=>b.addEventListener("click",()=>{state.log=state.log.filter(e=>e.id!==parseInt(b.dataset.id));saveDay();renderLog();renderMain();}));
+  list.querySelectorAll(".del-btn").forEach(b=>b.addEventListener("click",()=>{state.log=state.log.filter(e=>e.id!==parseInt(b.dataset.id));saveDay();renderLog();renderMain();generateCoachAdvice(true);}));
   list.querySelectorAll(".edit-btn").forEach(b=>b.addEventListener("click",()=>{const entry=state.log.find(e=>e.id===parseInt(b.dataset.id));if(entry)openEditModal(entry);}));
 }
 
@@ -570,7 +616,7 @@ function openEditModal(entry){
   document.body.appendChild(modal);
   const ec=document.getElementById("edit-cal");ec.addEventListener("focus",()=>ec.select());ec.addEventListener("input",()=>{ec.value=ec.value.replace(/[^0-9]/g,"");});
   document.getElementById("edit-cancel").addEventListener("click",()=>modal.remove());
-  document.getElementById("edit-save").addEventListener("click",()=>{const n=document.getElementById("edit-name").value.trim(),c=parseInt(document.getElementById("edit-cal").value)||0;if(!n)return;state.log=state.log.map(e=>e.id===entry.id?{...e,name:n,calories:c}:e);saveDay();renderLog();renderMain();modal.remove();showToast("✓ LAGRET!");});
+  document.getElementById("edit-save").addEventListener("click",()=>{const n=document.getElementById("edit-name").value.trim(),c=parseInt(document.getElementById("edit-cal").value)||0;if(!n)return;state.log=state.log.map(e=>e.id===entry.id?{...e,name:n,calories:c}:e);saveDay();renderLog();renderMain();modal.remove();showToast("✓ LAGRET!");generateCoachAdvice(true);});
   modal.addEventListener("click",e=>{if(e.target===modal)modal.remove();});
 }
 
@@ -634,6 +680,72 @@ function setProvider(p){
   else{Object.assign(gp.style,{border:"3px solid #4285f4",background:"rgba(66,133,244,0.15)",color:"#93c5fd"});Object.assign(cp.style,{border:`3px solid ${inactive.border}`,background:inactive.bg,color:inactive.color});el("gemini-key-wrap").style.display="block";el("claude-key-wrap").style.display="none";}
 }
 
+async function callAI(promptText){
+  // Shared text-only AI call, returns raw text or throws
+  const key=state.provider==="claude"?state.apiKey:state.geminiKey;
+  if(!key) throw new Error("Mangler API-nøkkel");
+  if(state.provider==="claude"){
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:[{type:"text",text:promptText}]}]})});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`HTTP ${res.status}`);}
+    const data=await res.json();
+    return data.content.map(b=>b.text||"").join("").trim();
+  } else {
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:promptText}]}],generationConfig:{maxOutputTokens:600,temperature:0.7}})});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`HTTP ${res.status}`);}
+    const data=await res.json();
+    if(!data.candidates?.length)throw new Error("Tomt svar");
+    return (data.candidates[0].content?.parts?.[0]?.text||"").trim();
+  }
+}
+
+function buildCoachPrompt(){
+  const used=getUsed(),burned=getBurned(),remaining=getRemaining();
+  const p=state.profile;
+  const foods=state.log.filter(e=>e.type==="food").map(e=>`${e.name} (${e.calories})`).join(", ")||"ingenting ennå";
+  const ex=state.log.filter(e=>e.type==="exercise").map(e=>`${e.name} (${e.calories})`).join(", ")||"ingen trening ennå";
+  let profileTxt="";
+  if(p.age)profileTxt+=`Alder: ${p.age}. `;
+  if(p.gender)profileTxt+=`Kjønn: ${p.gender}. `;
+  if(p.weight)profileTxt+=`Vekt: ${p.weight} kg. `;
+  if(p.goal)profileTxt+=`Mål: ${p.goal==="ned"?"gå ned i vekt":p.goal==="opp"?"gå opp i vekt":"holde vekten"}. `;
+  if(p.activity)profileTxt+=`Aktivitetsnivå: ${p.activity}. `;
+  if(p.notes)profileTxt+=`Notater: ${p.notes}. `;
+  if(!profileTxt)profileTxt="Ingen profilinfo oppgitt.";
+  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en KORT motiverende melding på norsk (maks 2-3 setninger) med ett konkret, vennlig råd. Vær positiv og støttende, ALDRI streng eller skambelagt. Ikke gi medisinske råd og ikke oppfordre til ekstrem restriksjon eller overtrening – fremhev sunn balanse. Ikke bruk markdown eller emojis i svaret.
+
+Profil: ${profileTxt}
+Dagens budsjett: ${state.budget} kcal.
+Spist i dag: ${foods}.
+Trening i dag: ${ex}.
+Gjenstående: ${remaining} kcal.
+
+Skriv meldingen nå (kun teksten, ingenting annet):`;
+}
+
+async function generateCoachAdvice(force){
+  const key=state.provider==="claude"?state.apiKey:state.geminiKey;
+  const ct=el("coach-text");
+  if(!key){ct.textContent="Legg til en API-nøkkel i innstillinger for personlige råd fra coachen din! 🥕";return;}
+  if(state.coachLoading)return;
+  state.coachLoading=true;
+  const rb=el("btn-coach-refresh");
+  if(rb){rb.style.animation="spin 0.8s linear infinite";rb.style.pointerEvents="none";}
+  ct.style.opacity="0.5";
+  if(!ct.textContent||force)ct.textContent="Tenker...";
+  try{
+    const txt=await callAI(buildCoachPrompt());
+    const clean=txt.replace(/^["']|["']$/g,"").trim();
+    state.coachText=clean;
+    ct.textContent=clean;
+  }catch(e){
+    ct.textContent="Kunne ikke hente råd akkurat nå. Prøv 🔄 igjen senere.";
+  }
+  ct.style.opacity="1";
+  state.coachLoading=false;
+  if(rb){rb.style.animation="";rb.style.pointerEvents="auto";}
+}
+
 async function analyzeWithAI(){
   const name=el("add-name").value;if(!name&&!state.imageFile)return;
   const key=state.provider==="claude"?state.apiKey:state.geminiKey;
@@ -647,8 +759,8 @@ async function analyzeWithAI(){
   const eb=el("error-box");if(eb){eb.style.display="none";eb.textContent="";}
   try{
     const prompt=state.addType==="food"
-      ?`You are a calorie estimation API. Respond with ONLY a JSON object, nothing else, no explanation, no markdown. Format: {"name":"<norwegian name>","calories":<integer>}. Estimate calories for: ${name||"the food in the image"}.`
-      :`You are a calorie estimation API. Respond with ONLY a JSON object, nothing else, no explanation, no markdown. Format: {"name":"<norwegian activity name>","calories":<integer>}. Estimate calories burned for: ${name||"the activity in the image"}.`;
+      ?`Du er en ernæringsekspert som estimerer kalorier. Anta ÉN normal, vanlig porsjon med mindre annet er oppgitt. Vær realistisk og moderat – ikke overvurder. Tenk på typiske porsjonsstørrelser slik en vanlig person spiser. Svar med KUN et JSON-objekt, ingen forklaring, ingen markdown. Format: {"name":"<kort norsk navn>","calories":<heltall>}. Mat: ${name||"maten i bildet"}.`
+      :`Du er en treningsekspert som estimerer forbrente kalorier. Anta en person på ca. 75 kg med mindre annet er oppgitt. Vær realistisk og moderat. Svar med KUN et JSON-objekt, ingen forklaring, ingen markdown. Format: {"name":"<kort norsk navn>","calories":<heltall>}. Aktivitet: ${name||"aktiviteten i bildet"}.`;
 
     let parsed;
     if(state.provider==="claude"){
@@ -731,7 +843,37 @@ function init(){
   const th=resolveTheme(state.themeId);applyTheme(th);renderMain();renderThemePicker();
   el("settings-budget").value=state.budget;el("settings-api").value=state.apiKey;el("settings-gemini").value=state.geminiKey;
   setProvider(state.provider);
+  // Populate profile fields
+  el("settings-age").value=state.profile.age||"";
+  el("settings-weight").value=state.profile.weight||"";
+  el("settings-notes").value=state.profile.notes||"";
+  el("settings-age").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
+  el("settings-weight").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
+  // Profile toggle groups
+  function styleToggle(groupId,cls,field){
+    const th=resolveTheme(state.themeId);
+    document.querySelectorAll(`#${groupId} .${cls}`).forEach(b=>{
+      const active=state.profile[field]===b.dataset.val;
+      b.style.borderColor=active?th.primary:th.border;
+      b.style.background=active?th.primary+"22":"transparent";
+      b.style.color=active?th.primary:th.subtext;
+    });
+  }
+  function setupToggle(groupId,cls,field){
+    document.querySelectorAll(`#${groupId} .${cls}`).forEach(b=>{
+      b.addEventListener("click",()=>{
+        state.profile[field]=state.profile[field]===b.dataset.val?"":b.dataset.val;
+        styleToggle(groupId,cls,field);
+      });
+    });
+    styleToggle(groupId,cls,field);
+  }
+  setupToggle("gender-toggle","gender-btn","gender");
+  setupToggle("goal-toggle","goal-btn","goal");
+  setupToggle("activity-toggle","activity-btn","activity");
   if(state.streak>0){el("streak-card").style.display="block";el("streak-info").textContent=`🔥 ${state.streak} dager på rad`;}
+  // Coach refresh button
+  el("btn-coach-refresh").addEventListener("click",()=>generateCoachAdvice(true));
   el("add-name").addEventListener("input",updateAddConfirmBtn);
   el("add-cal").addEventListener("focus",e=>e.target.select());
   el("add-cal").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");updateAddConfirmBtn();});
@@ -741,10 +883,10 @@ function init(){
   el("file-input-camera").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;el("add-name").value="";el("add-cal").value="";const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);e.target.value="";});
   el("btn-remove-img").addEventListener("click",()=>{state.imageFile=null;el("img-preview-wrap").style.display="none";el("file-input").value="";updateAddConfirmBtn();});
   el("btn-analyze").addEventListener("click",analyzeWithAI);
-  el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");});
+  el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");generateCoachAdvice(true);});
   el("settings-budget").addEventListener("focus",e=>e.target.select());
   el("settings-budget").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
-  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
+  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;state.profile.age=el("settings-age").value.trim();state.profile.weight=el("settings-weight").value.trim();state.profile.notes=el("settings-notes").value.trim();save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);save("cq_profile",state.profile);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
   // (A) Reset day button
   el("btn-reset-day").addEventListener("click",()=>{
     if(state.log.length===0){showToast("Loggen er allerede tom");return;}
@@ -754,6 +896,8 @@ function init(){
   });
   // Init nav
   navTo("main");
+  // Generate initial coach advice on open (covers empty log first-open and returning users)
+  generateCoachAdvice(true);
 
   // Check for day change when app regains focus (e.g. opened next morning)
   document.addEventListener("visibilitychange",()=>{
