@@ -271,7 +271,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v53</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v54</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -691,11 +691,14 @@ async function callAI(promptText){
     return data.content.map(b=>b.text||"").join("").trim();
   } else {
     const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:promptText}]}],generationConfig:{maxOutputTokens:600,temperature:0.7}})});
+    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:promptText}]}],generationConfig:{maxOutputTokens:1200,temperature:0.7}})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`HTTP ${res.status}`);}
     const data=await res.json();
     if(!data.candidates?.length)throw new Error("Tomt svar");
-    return (data.candidates[0].content?.parts?.[0]?.text||"").trim();
+    const cand=data.candidates[0];
+    const txt=(cand.content?.parts?.map(p=>p.text||"").join("")||"").trim();
+    if(!txt)throw new Error("Tomt svar (finish: "+cand.finishReason+")");
+    return txt;
   }
 }
 
@@ -712,7 +715,7 @@ function buildCoachPrompt(){
   if(p.activity)profileTxt+=`Aktivitetsnivå: ${p.activity}. `;
   if(p.notes)profileTxt+=`Notater: ${p.notes}. `;
   if(!profileTxt)profileTxt="Ingen profilinfo oppgitt.";
-  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en KORT motiverende melding på norsk (maks 2-3 setninger) med ett konkret, vennlig råd. Vær positiv og støttende, ALDRI streng eller skambelagt. Ikke gi medisinske råd og ikke oppfordre til ekstrem restriksjon eller overtrening – fremhev sunn balanse. Ikke bruk markdown eller emojis i svaret.
+  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en KORT motiverende melding på norsk – maks 2 korte setninger, under 200 tegn totalt – med ett konkret, vennlig råd. Vær positiv og støttende, ALDRI streng eller skambelagt. Ikke gi medisinske råd og ikke oppfordre til ekstrem restriksjon eller overtrening – fremhev sunn balanse. Ikke bruk markdown eller emojis.
 
 Profil: ${profileTxt}
 Dagens budsjett: ${state.budget} kcal.
@@ -720,7 +723,7 @@ Spist i dag: ${foods}.
 Trening i dag: ${ex}.
 Gjenstående: ${remaining} kcal.
 
-Skriv meldingen nå (kun teksten, ingenting annet):`;
+Skriv den korte meldingen nå (kun teksten):`;
 }
 
 async function generateCoachAdvice(force){
