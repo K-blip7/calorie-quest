@@ -282,7 +282,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v56</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v59</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -723,13 +723,13 @@ async function callAI(promptText){
   const key=state.provider==="claude"?state.apiKey:state.geminiKey;
   if(!key) throw new Error("Mangler API-nøkkel");
   if(state.provider==="claude"){
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:[{type:"text",text:promptText}]}]})});
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:700,messages:[{role:"user",content:[{type:"text",text:promptText}]}]})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`HTTP ${res.status}`);}
     const data=await res.json();
     return data.content.map(b=>b.text||"").join("").trim();
   } else {
     const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:promptText}]}],generationConfig:{maxOutputTokens:1200,temperature:0.7}})});
+    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:promptText}]}],generationConfig:{maxOutputTokens:2000,temperature:0.7}})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`HTTP ${res.status}`);}
     const data=await res.json();
     if(!data.candidates?.length)throw new Error("Tomt svar");
@@ -771,12 +771,12 @@ function buildCoachPrompt(){
   if(p.activity)profileTxt+=`Aktivitetsnivå: ${p.activity}. `;
   if(p.notes)profileTxt+=`Notater: ${p.notes}. `;
   if(!profileTxt)profileTxt="Ingen profilinfo oppgitt.";
-  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig melding på norsk i TRE korte avsnitt, skilt med linjeskift:
-1) STATUS: kort oppsummering av hvor brukeren ligger an akkurat nå (ta hensyn til at det er ${tod}).
-2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene.
-3) TIPS: ett konkret, vennlig råd for resten av dagen. Hvis det er kalorier igjen, foreslå et konkret måltid som passer (ta hensyn til preferanser/notater).
+  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig og utfyllende melding på norsk i TRE avsnitt, skilt med linjeskift. Hvert avsnitt skal være 2-3 setninger:
+1) STATUS: en vennlig oppsummering av hvor brukeren ligger an akkurat nå (det er ${tod}), med litt kontekst om hva tallene betyr.
+2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene, og forklar hvorfor det er positivt.
+3) TIPS: ett eller to konkrete, vennlige råd for resten av dagen. Hvis det er kalorier igjen, foreslå gjerne et passende måltid med litt begrunnelse (ta hensyn til preferanser/notater). Motiver også til fysisk aktivitet på en lavterskel og lystbetont måte – for eksempel en gåtur, en treningsøkt eller annen bevegelse som passer brukerens aktivitetsnivå og dagsform.
 
-Hold hvert avsnitt kort – maks 2 setninger hver. Vær positiv og støttende, ALDRI streng eller skambelagt. Ikke gi medisinske råd og ikke oppfordre til ekstrem restriksjon eller overtrening – fremhev sunn balanse. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i tre avsnitt.
+Vær varm, personlig og motiverende, ALDRI streng eller skambelagt. Ingen medisinske råd, ingen oppfordring til ekstrem restriksjon eller overtrening – fremhev sunn balanse. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i tre avsnitt.
 
 Tid på døgnet: ${tod}.
 Profil: ${profileTxt}
