@@ -87,7 +87,7 @@
         <div id="coach-card" class="panel" style="margin:12px 12px 0;padding:16px 18px;border:3px solid;border-radius:4px;display:flex;gap:14px;align-items:flex-start;">
           <div style="font-size:28px;flex-shrink:0;line-height:1.2;">🐰</div>
           <div style="flex:1;min-width:0;">
-            <div id="coach-text" style="font-size:15px;line-height:1.5;overflow-wrap:break-word;word-break:break-word;white-space:normal;"></div>
+            <div id="coach-text" style="font-size:16px;line-height:1.6;overflow-wrap:break-word;word-break:break-word;white-space:pre-line;"></div>
           </div>
           <button class="btn" id="btn-coach-refresh" style="flex-shrink:0;width:36px;height:36px;font-size:16px;background:transparent;border:2px solid;display:flex;align-items:center;justify-content:center;">🔄</button>
         </div>
@@ -271,7 +271,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v54</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v55</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -715,7 +715,7 @@ function buildCoachPrompt(){
   if(p.activity)profileTxt+=`Aktivitetsnivå: ${p.activity}. `;
   if(p.notes)profileTxt+=`Notater: ${p.notes}. `;
   if(!profileTxt)profileTxt="Ingen profilinfo oppgitt.";
-  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en KORT motiverende melding på norsk – maks 2 korte setninger, under 200 tegn totalt – med ett konkret, vennlig råd. Vær positiv og støttende, ALDRI streng eller skambelagt. Ikke gi medisinske råd og ikke oppfordre til ekstrem restriksjon eller overtrening – fremhev sunn balanse. Ikke bruk markdown eller emojis.
+  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en motiverende melding på norsk i TO korte avsnitt: første avsnitt en personlig oppmuntring basert på dagens fremgang, andre avsnitt ett konkret, vennlig råd. Hold det passe kort (under 400 tegn totalt). Vær positiv og støttende, ALDRI streng eller skambelagt. Ikke gi medisinske råd og ikke oppfordre til ekstrem restriksjon eller overtrening – fremhev sunn balanse. Ikke bruk markdown eller emojis. Skill avsnittene med et linjeskift.
 
 Profil: ${profileTxt}
 Dagens budsjett: ${state.budget} kcal.
@@ -723,7 +723,7 @@ Spist i dag: ${foods}.
 Trening i dag: ${ex}.
 Gjenstående: ${remaining} kcal.
 
-Skriv den korte meldingen nå (kun teksten):`;
+Skriv meldingen nå (kun teksten):`;
 }
 
 async function generateCoachAdvice(force){
@@ -741,12 +741,28 @@ async function generateCoachAdvice(force){
     const clean=txt.replace(/^["']|["']$/g,"").trim();
     state.coachText=clean;
     ct.textContent=clean;
+    // Cache with today's date so it persists until next log or new day
+    save("cq_coach",{date:TODAY,text:clean});
   }catch(e){
     ct.textContent="Kunne ikke hente råd akkurat nå. Prøv 🔄 igjen senere.";
   }
   ct.style.opacity="1";
   state.coachLoading=false;
   if(rb){rb.style.animation="";rb.style.pointerEvents="auto";}
+}
+
+// Show cached advice if valid for today; otherwise generate once
+function showOrGenerateCoach(){
+  const ct=el("coach-text");
+  const key=state.provider==="claude"?state.apiKey:state.geminiKey;
+  if(!key){ct.textContent="Legg til en API-nøkkel i innstillinger for personlige råd fra coachen din! 🥕";return;}
+  const cached=load("cq_coach",null);
+  if(cached&&cached.date===TODAY&&cached.text){
+    state.coachText=cached.text;
+    ct.textContent=cached.text;
+  } else {
+    generateCoachAdvice(true);
+  }
 }
 
 async function analyzeWithAI(){
@@ -899,8 +915,8 @@ function init(){
   });
   // Init nav
   navTo("main");
-  // Generate initial coach advice on open (covers empty log first-open and returning users)
-  generateCoachAdvice(true);
+  // Show cached coach advice, or generate once if none exists for today
+  showOrGenerateCoach();
 
   // Check for day change when app regains focus (e.g. opened next morning)
   document.addEventListener("visibilitychange",()=>{

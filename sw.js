@@ -1,8 +1,6 @@
-const CACHE_NAME = "calorie-quest-v54";
+const CACHE_NAME = "calorie-quest-v55";
 
-self.addEventListener("install", e => {
-  self.skipWaiting();
-});
+self.addEventListener("install", e => { self.skipWaiting(); });
 
 self.addEventListener("activate", e => {
   e.waitUntil(
@@ -15,14 +13,10 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const url = e.request.url;
   if (!url.startsWith("http")) return;
-
-  // API calls – always network
   if (url.includes("anthropic.com") || url.includes("googleapis.com")) {
     e.respondWith(fetch(e.request).catch(() => new Response("", {status: 503})));
     return;
   }
-
-  // index.html – always network first, fall back to cache
   if (url.endsWith("/") || url.includes("index.html") || url.endsWith("calorie-quest")) {
     e.respondWith(
       fetch(e.request).then(res => {
@@ -33,8 +27,6 @@ self.addEventListener("fetch", e => {
     );
     return;
   }
-
-  // Other assets – cache first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
