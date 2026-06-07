@@ -88,7 +88,8 @@
           <div id="date-header" style="text-align:center;font-size:15px;letter-spacing:1px;opacity:0.6;flex:1;"></div>
           <button class="btn" id="btn-settings" onclick="navTo('settings')" style="width:44px;height:44px;font-size:20px;display:flex;align-items:center;justify-content:center;border:2px solid;background:transparent;border-radius:4px;">⚙</button>
         </div>
-        <div id="hero-panel" class="panel" style="margin:12px 12px 0;padding:18px;display:flex;gap:18px;align-items:flex-start;border:3px solid;border-radius:4px;">
+        <div id="hero-panel" class="panel" style="margin:12px 12px 0;padding:18px;border:3px solid;border-radius:4px;">
+          <div style="display:flex;gap:18px;align-items:flex-start;">
           <div style="width:130px;height:170px;flex-shrink:0;position:relative;" class="hero-wrap">
             <div id="hero-glow" style="position:absolute;inset:0;"></div>
             <svg id="hero-svg" viewBox="0 0 80 120" width="100%" height="100%"></svg>
@@ -110,6 +111,19 @@
                 <div id="stat-ex-label" style="font-size:13px;margin-bottom:8px;"></div>
                 <div id="stat-ex-val" style="font-size:22px;font-weight:700;"></div>
               </div>
+            </div>
+          </div>
+          </div>
+          <div id="streak-row" style="display:none;margin-top:16px;padding-top:16px;border-top:2px solid;gap:10px;grid-template-columns:1fr 1fr;">
+            <div id="streak-budget" style="display:none;text-align:center;">
+              <div style="font-size:22px;line-height:1;">🔥</div>
+              <div id="streak-budget-num" style="font-size:18px;font-weight:700;margin-top:4px;"></div>
+              <div style="font-size:11px;opacity:0.55;letter-spacing:0.5px;margin-top:2px;">dager innenfor budsjett</div>
+            </div>
+            <div id="streak-ex" style="display:none;text-align:center;">
+              <div style="font-size:22px;line-height:1;">💪</div>
+              <div id="streak-ex-num" style="font-size:18px;font-weight:700;margin-top:4px;"></div>
+              <div style="font-size:11px;opacity:0.55;letter-spacing:0.5px;margin-top:2px;">uker med trening</div>
             </div>
           </div>
         </div>
@@ -251,6 +265,13 @@
             <button class="btn coachlen-btn" data-val="medium" style="flex:1;padding:12px;font-size:13px;border:2px solid;">Medium</button>
             <button class="btn coachlen-btn" data-val="lang" style="flex:1;padding:12px;font-size:13px;border:2px solid;">Lang</button>
           </div>
+          <div style="font-size:13px;opacity:0.5;margin:16px 0 6px;">💪 TRENINGSMÅL PER UKE</div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <button class="btn" id="exgoal-minus" style="width:48px;height:48px;font-size:24px;border:2px solid;display:flex;align-items:center;justify-content:center;">−</button>
+            <div id="exgoal-val" style="flex:1;text-align:center;font-size:24px;font-weight:700;"></div>
+            <button class="btn" id="exgoal-plus" style="width:48px;height:48px;font-size:24px;border:2px solid;display:flex;align-items:center;justify-content:center;">+</button>
+          </div>
+          <div style="font-size:12px;opacity:0.4;margin-top:6px;text-align:center;">dager med trening per uke for å holde streaken</div>
         </div>
         <!-- 2. Theme -->
         <div id="theme-card" class="panel" style="padding:20px;border:3px solid;">
@@ -288,7 +309,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v62</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v64</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -321,7 +342,7 @@
 
 <script>
 const TODAY = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;})();
-let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null, profile:{age:"",weight:"",gender:"",goal:"",activity:"",notes:""}, coachText:"", coachLoading:false, coachLen:"medium" };
+let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null, profile:{age:"",weight:"",gender:"",goal:"",activity:"",notes:""}, coachText:"", coachLoading:false, coachLen:"medium", exerciseGoal:3 };
 
 const THEMES = {
   fantasy:{id:"fantasy",name:"Eventyrrike",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#2a1f4a",panel:"#3d2d66dd",border:"#6d4baf",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
@@ -352,6 +373,7 @@ function loadAll(){
   state.provider=load("cq_provider","claude");
   state.profile=load("cq_profile",{age:"",weight:"",gender:"",goal:"",activity:"",notes:""});
   state.coachLen=load("cq_coachlen","medium");
+  state.exerciseGoal=load("cq_exercisegoal",3);
   state.streak=load("cq_streak",0);
   const day=load("cq_day",null);
   // If stored day is from a previous date, archive its totals into history before resetting
@@ -372,12 +394,68 @@ function archiveDay(day){
   // Avoid duplicate for same date
   hist=hist.filter(h=>h.date!==day.date);
   hist.push(entry);
-  // Keep only last 7 days, sorted by date
+  // Keep only last 720 days, sorted by date
   hist.sort((a,b)=>a.date<b.date?-1:1);
-  if(hist.length>7)hist=hist.slice(hist.length-7);
+  if(hist.length>720)hist=hist.slice(hist.length-720);
   save("cq_history",hist);
 }
 function getHistory(){return load("cq_history",[]);}
+
+// --- Streak calculations ---
+// Returns YYYY-MM-DD for a Date (local)
+function dateStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+
+// Budget streak: consecutive days within budget, counting back from today.
+// Today counts if currently within budget. Yesterday and earlier come from history.
+function getBudgetStreak(){
+  const hist=getHistory();
+  const map={};hist.forEach(h=>{map[h.date]=h;});
+  let streak=0;
+  const today=new Date();
+  // Today: counts if within budget right now
+  const todayWithin=(getUsed()-getBurned())<=state.budget;
+  // Walk backwards from today
+  for(let i=0;;i++){
+    const d=new Date(today);d.setDate(today.getDate()-i);
+    const ds=dateStr(d);
+    if(i===0){
+      if(todayWithin)streak++; else { /* today not yet counted, continue to check past */ }
+      continue;
+    }
+    const h=map[ds];
+    if(h&&h.withinBudget)streak++;
+    else break;
+  }
+  return streak;
+}
+
+// Exercise streak: consecutive Mon-Sun weeks with >= goal training days.
+// Current week counts if goal already reached.
+function getExerciseStreak(goal){
+  const hist=getHistory();
+  // Build a set of dates that had exercise
+  const trained={};hist.forEach(h=>{if(h.burned>0)trained[h.date]=true;});
+  // Today's training counts for current week
+  const todayTrained=getBurned()>0;
+  // Helper: Monday of the week containing date d
+  function monday(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x;}
+  const today=new Date();today.setHours(0,0,0,0);
+  let weeks=0;
+  for(let w=0;;w++){
+    const wkStart=monday(today);wkStart.setDate(wkStart.getDate()-w*7);
+    let count=0;
+    for(let i=0;i<7;i++){
+      const d=new Date(wkStart);d.setDate(wkStart.getDate()+i);
+      if(d>today)break; // don't count future days
+      const ds=dateStr(d);
+      if(ds===dateStr(today)){if(todayTrained||trained[ds])count++;}
+      else if(trained[ds])count++;
+    }
+    if(count>=goal)weeks++;
+    else break;
+  }
+  return weeks;
+}
 
 // Resolve a theme id to an actual theme. "auto" follows the OS color scheme.
 function resolveTheme(id){
@@ -510,6 +588,11 @@ function applyTheme(th){
   el("bg").innerHTML=bgs[th.id]();
   el("main-title")&&(el("main-title").textContent=`${th.emoji} CALORIE QUEST`);
   el("hero-panel").style.background=th.panel;el("hero-panel").style.borderColor=th.border;
+  const sr=el("streak-row");if(sr)sr.style.borderTopColor=th.border;
+  const sbn=el("streak-budget-num");if(sbn)sbn.style.color=th.primary;
+  const sen=el("streak-ex-num");if(sen)sen.style.color=th.primary;
+  ["exgoal-minus","exgoal-plus"].forEach(id=>{const b=el(id);if(b){b.style.borderColor=th.border;b.style.color=th.primary;b.style.background="transparent";}});
+  const egv=el("exgoal-val");if(egv)egv.style.color=th.text;
   const cc=el("coach-card");if(cc){cc.style.background=th.panel;cc.style.borderColor=th.secondary+"80";}
   const cr=el("btn-coach-refresh");if(cr){cr.style.borderColor=th.secondary;cr.style.color=th.secondary;cr.style.background=th.secondary+"15";}
   const ctx=el("coach-text");if(ctx)ctx.style.color=th.text;
@@ -601,6 +684,25 @@ function renderMain(){
     el("net-calc").style.opacity="0.7";
   } else {
     el("net-calc").style.opacity="0.55";
+  }
+
+  // Streaks in hero panel
+  const bStreak=getBudgetStreak();
+  const eStreak=getExerciseStreak(state.exerciseGoal);
+  const sRow=el("streak-row"),sB=el("streak-budget"),sE=el("streak-ex");
+  if(sB){
+    if(bStreak>0){sB.style.display="block";el("streak-budget-num").textContent=`${bStreak} ${bStreak===1?"dag":"dager"}`;}
+    else sB.style.display="none";
+  }
+  if(sE){
+    if(eStreak>0){sE.style.display="block";el("streak-ex-num").textContent=`${eStreak} ${eStreak===1?"uke":"uker"}`;}
+    else sE.style.display="none";
+  }
+  if(sRow){
+    const anyStreak=bStreak>0||eStreak>0;
+    sRow.style.display=anyStreak?"grid":"none";
+    // If only one is visible, span full width by switching to single column
+    if(anyStreak){sRow.style.gridTemplateColumns=(bStreak>0&&eStreak>0)?"1fr 1fr":"1fr";}
   }
 
   // Streak shown on the home settings gear (🔥 if active)
@@ -755,14 +857,13 @@ function buildCoachPrompt(){
   // Time of day
   const hr=new Date().getHours();
   const tod=hr<10?"morgen":hr<14?"formiddag":hr<17?"ettermiddag":hr<21?"kveld":"sen kveld";
-  // History / trends from last 7 days
+  // History / trends
   const hist=getHistory();
   let trendTxt="Ingen historikk ennå.";
   if(hist.length){
     const days=hist.length;
     const within=hist.filter(h=>h.withinBudget).length;
     const trained=hist.filter(h=>h.burned>0).length;
-    // streak of consecutive within-budget days counting back from most recent
     let streak=0;
     for(let i=hist.length-1;i>=0;i--){if(hist[i].withinBudget)streak++;else break;}
     trendTxt=`Siste ${days} dager: innenfor budsjett ${within} av ${days} dager`;
@@ -770,6 +871,13 @@ function buildCoachPrompt(){
     if(trained>0)trendTxt+=`, trente ${trained} av ${days} dager`;
     trendTxt+=".";
   }
+  // Current streaks (live)
+  const bStreak=getBudgetStreak();
+  const eStreak=getExerciseStreak(state.exerciseGoal);
+  let streakTxt="";
+  if(bStreak>=2)streakTxt+=`Brukeren har holdt budsjettet ${bStreak} dager på rad. `;
+  if(eStreak>=1)streakTxt+=`Brukeren har nådd treningsmålet (${state.exerciseGoal} dager/uke) ${eStreak} ${eStreak===1?"uke":"uker"} på rad. `;
+  if(!streakTxt)streakTxt="Ingen aktive streaks akkurat nå.";
   let profileTxt="";
   if(p.age)profileTxt+=`Alder: ${p.age}. `;
   if(p.gender)profileTxt+=`Kjønn: ${p.gender}. `;
@@ -785,7 +893,7 @@ function buildCoachPrompt(){
   }[state.coachLen]||{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 400 tegn totalt."};
   return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig melding på norsk i TRE avsnitt, skilt med linjeskift. ${lenSpec.para}
 1) STATUS: en vennlig oppsummering av hvor brukeren ligger an akkurat nå (det er ${tod}).
-2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene.
+2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene. Hvis brukeren har en aktiv streak (se nedenfor), feire den gjerne – spesielt runde tall eller lange streaks.
 3) TIPS: ett konkret råd for resten av dagen. Hvis det er kalorier igjen, foreslå et passende måltid. Motiver gjerne også til fysisk aktivitet på en lavterskel, lystbetont måte.
 
 ${lenSpec.total} Vær positiv og varm, ALDRI streng eller skambelagt. Ingen medisinske råd, ingen oppfordring til ekstrem restriksjon eller overtrening. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i tre avsnitt.
@@ -793,6 +901,7 @@ ${lenSpec.total} Vær positiv og varm, ALDRI streng eller skambelagt. Ingen medi
 Tid på døgnet: ${tod}.
 Profil: ${profileTxt}
 Trend: ${trendTxt}
+Streaks: ${streakTxt}
 Dagens budsjett: ${state.budget} kcal.
 Spist i dag: ${foods}.
 Trening i dag: ${ex}.
@@ -980,6 +1089,11 @@ function init(){
     b.addEventListener("click",()=>{state.coachLen=b.dataset.val;styleCoachLen();});
   });
   styleCoachLen();
+  // Exercise goal stepper
+  function renderExGoal(){el("exgoal-val").textContent=`${state.exerciseGoal} ${state.exerciseGoal===1?"dag":"dager"}`;}
+  el("exgoal-minus").addEventListener("click",()=>{if(state.exerciseGoal>1){state.exerciseGoal--;renderExGoal();}});
+  el("exgoal-plus").addEventListener("click",()=>{if(state.exerciseGoal<7){state.exerciseGoal++;renderExGoal();}});
+  renderExGoal();
   if(state.streak>0){el("streak-card").style.display="block";el("streak-info").textContent=`🔥 ${state.streak} dager på rad`;}
   // Coach refresh button
   el("btn-coach-refresh").addEventListener("click",()=>generateCoachAdvice(true));
@@ -995,7 +1109,7 @@ function init(){
   el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");generateCoachAdvice(true);});
   el("settings-budget").addEventListener("focus",e=>e.target.select());
   el("settings-budget").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
-  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;state.profile.age=el("settings-age").value.trim();state.profile.weight=el("settings-weight").value.trim();state.profile.notes=el("settings-notes").value.trim();save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);save("cq_profile",state.profile);save("cq_coachlen",state.coachLen);save("cq_coach",null);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
+  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;state.profile.age=el("settings-age").value.trim();state.profile.weight=el("settings-weight").value.trim();state.profile.notes=el("settings-notes").value.trim();save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);save("cq_profile",state.profile);save("cq_coachlen",state.coachLen);save("cq_exercisegoal",state.exerciseGoal);save("cq_coach",null);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
   // (A) Reset day button
   el("btn-reset-day").addEventListener("click",()=>{
     if(state.log.length===0){showToast("Loggen er allerede tom");return;}
