@@ -245,6 +245,12 @@
           </div>
           <div style="font-size:13px;opacity:0.5;margin-bottom:6px;">NOTATER / PREFERANSER</div>
           <input id="settings-notes" type="text" placeholder="f.eks. vegetarianer, trener til maraton" style="font-size:14px;padding:12px;"/>
+          <div style="font-size:13px;opacity:0.5;margin:16px 0 6px;">🐰 LENGDE PÅ COACH-RÅD</div>
+          <div id="coachlen-toggle" style="display:flex;gap:8px;">
+            <button class="btn coachlen-btn" data-val="kort" style="flex:1;padding:12px;font-size:13px;border:2px solid;">Kort</button>
+            <button class="btn coachlen-btn" data-val="medium" style="flex:1;padding:12px;font-size:13px;border:2px solid;">Medium</button>
+            <button class="btn coachlen-btn" data-val="lang" style="flex:1;padding:12px;font-size:13px;border:2px solid;">Lang</button>
+          </div>
         </div>
         <!-- 2. Theme -->
         <div id="theme-card" class="panel" style="padding:20px;border:3px solid;">
@@ -282,7 +288,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v59</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v61</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -315,7 +321,7 @@
 
 <script>
 const TODAY = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;})();
-let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null, profile:{age:"",weight:"",gender:"",goal:"",activity:"",notes:""}, coachText:"", coachLoading:false };
+let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null, profile:{age:"",weight:"",gender:"",goal:"",activity:"",notes:""}, coachText:"", coachLoading:false, coachLen:"medium" };
 
 const THEMES = {
   fantasy:{id:"fantasy",name:"Eventyrrike",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#2a1f4a",panel:"#3d2d66dd",border:"#6d4baf",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
@@ -345,6 +351,7 @@ function loadAll(){
   state.geminiKey=load("cq_geminikey","");
   state.provider=load("cq_provider","claude");
   state.profile=load("cq_profile",{age:"",weight:"",gender:"",goal:"",activity:"",notes:""});
+  state.coachLen=load("cq_coachlen","medium");
   state.streak=load("cq_streak",0);
   const day=load("cq_day",null);
   // If stored day is from a previous date, archive its totals into history before resetting
@@ -771,12 +778,17 @@ function buildCoachPrompt(){
   if(p.activity)profileTxt+=`Aktivitetsnivå: ${p.activity}. `;
   if(p.notes)profileTxt+=`Notater: ${p.notes}. `;
   if(!profileTxt)profileTxt="Ingen profilinfo oppgitt.";
-  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig og utfyllende melding på norsk i TRE avsnitt, skilt med linjeskift. Hvert avsnitt skal være 2-3 setninger:
-1) STATUS: en vennlig oppsummering av hvor brukeren ligger an akkurat nå (det er ${tod}), med litt kontekst om hva tallene betyr.
-2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene, og forklar hvorfor det er positivt.
-3) TIPS: ett eller to konkrete, vennlige råd for resten av dagen. Hvis det er kalorier igjen, foreslå gjerne et passende måltid med litt begrunnelse (ta hensyn til preferanser/notater). Motiver også til fysisk aktivitet på en lavterskel og lystbetont måte – for eksempel en gåtur, en treningsøkt eller annen bevegelse som passer brukerens aktivitetsnivå og dagsform.
+  const lenSpec={
+    kort:{para:"Hvert avsnitt skal være ÉN kort setning.",total:"Hold HELE meldingen under 220 tegn totalt."},
+    medium:{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 400 tegn totalt."},
+    lang:{para:"Hvert avsnitt skal være 2-3 setninger med litt mer kontekst og begrunnelse.",total:"Hold HELE meldingen under 650 tegn totalt."}
+  }[state.coachLen]||{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 400 tegn totalt."};
+  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig melding på norsk i TRE avsnitt, skilt med linjeskift. ${lenSpec.para}
+1) STATUS: en vennlig oppsummering av hvor brukeren ligger an akkurat nå (det er ${tod}).
+2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene.
+3) TIPS: ett konkret råd for resten av dagen. Hvis det er kalorier igjen, foreslå et passende måltid. Motiver gjerne også til fysisk aktivitet på en lavterskel, lystbetont måte.
 
-Vær varm, personlig og motiverende, ALDRI streng eller skambelagt. Ingen medisinske råd, ingen oppfordring til ekstrem restriksjon eller overtrening – fremhev sunn balanse. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i tre avsnitt.
+${lenSpec.total} Vær positiv og varm, ALDRI streng eller skambelagt. Ingen medisinske råd, ingen oppfordring til ekstrem restriksjon eller overtrening. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i tre avsnitt.
 
 Tid på døgnet: ${tod}.
 Profil: ${profileTxt}
@@ -786,7 +798,7 @@ Spist i dag: ${foods}.
 Trening i dag: ${ex}.
 Gjenstående: ${remaining} kcal.
 
-Skriv meldingen nå (kun de tre avsnittene, ingenting annet):`;
+Skriv de tre avsnittene nå (kun teksten):`;
 }
 
 async function generateCoachAdvice(force){
@@ -954,6 +966,20 @@ function init(){
   setupToggle("gender-toggle","gender-btn","gender");
   setupToggle("goal-toggle","goal-btn","goal");
   setupToggle("activity-toggle","activity-btn","activity");
+  // Coach length toggle (stored in state.coachLen, not profile)
+  function styleCoachLen(){
+    const th=resolveTheme(state.themeId);
+    document.querySelectorAll("#coachlen-toggle .coachlen-btn").forEach(b=>{
+      const active=state.coachLen===b.dataset.val;
+      b.style.borderColor=active?th.primary:th.border;
+      b.style.background=active?th.primary+"22":"transparent";
+      b.style.color=active?th.primary:th.subtext;
+    });
+  }
+  document.querySelectorAll("#coachlen-toggle .coachlen-btn").forEach(b=>{
+    b.addEventListener("click",()=>{state.coachLen=b.dataset.val;styleCoachLen();});
+  });
+  styleCoachLen();
   if(state.streak>0){el("streak-card").style.display="block";el("streak-info").textContent=`🔥 ${state.streak} dager på rad`;}
   // Coach refresh button
   el("btn-coach-refresh").addEventListener("click",()=>generateCoachAdvice(true));
@@ -969,7 +995,7 @@ function init(){
   el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");generateCoachAdvice(true);});
   el("settings-budget").addEventListener("focus",e=>e.target.select());
   el("settings-budget").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
-  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;state.profile.age=el("settings-age").value.trim();state.profile.weight=el("settings-weight").value.trim();state.profile.notes=el("settings-notes").value.trim();save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);save("cq_profile",state.profile);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
+  el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;state.profile.age=el("settings-age").value.trim();state.profile.weight=el("settings-weight").value.trim();state.profile.notes=el("settings-notes").value.trim();save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);save("cq_profile",state.profile);save("cq_coachlen",state.coachLen);save("cq_coach",null);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
   // (A) Reset day button
   el("btn-reset-day").addEventListener("click",()=>{
     if(state.log.length===0){showToast("Loggen er allerede tom");return;}
