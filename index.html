@@ -114,7 +114,12 @@
             </div>
           </div>
           </div>
-          <div id="streak-row" style="display:none;margin-top:16px;padding-top:16px;border-top:2px solid;gap:10px;grid-template-columns:1fr 1fr;">
+          <div id="week-progress" style="margin-top:16px;padding-top:14px;border-top:2px solid;display:flex;align-items:center;justify-content:center;gap:10px;">
+            <span style="font-size:18px;">💪</span>
+            <span id="week-progress-dots" style="font-size:16px;letter-spacing:4px;"></span>
+            <span id="week-progress-label" style="font-size:13px;opacity:0.6;"></span>
+          </div>
+          <div id="streak-row" style="display:none;margin-top:14px;padding-top:14px;border-top:2px solid;gap:10px;grid-template-columns:1fr 1fr;">
             <div id="streak-budget" style="display:none;text-align:center;">
               <div style="font-size:22px;line-height:1;">🔥</div>
               <div id="streak-budget-num" style="font-size:18px;font-weight:700;margin-top:4px;"></div>
@@ -309,7 +314,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v64</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v66</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -412,17 +417,13 @@ function getBudgetStreak(){
   const map={};hist.forEach(h=>{map[h.date]=h;});
   let streak=0;
   const today=new Date();
-  // Today: counts if within budget right now
+  // Today counts if within budget right now; if over, today simply doesn't count
+  // (the streak from previous days still shows until the day is finalized)
   const todayWithin=(getUsed()-getBurned())<=state.budget;
-  // Walk backwards from today
-  for(let i=0;;i++){
+  if(todayWithin)streak++;
+  for(let i=1;;i++){
     const d=new Date(today);d.setDate(today.getDate()-i);
-    const ds=dateStr(d);
-    if(i===0){
-      if(todayWithin)streak++; else { /* today not yet counted, continue to check past */ }
-      continue;
-    }
-    const h=map[ds];
+    const h=map[dateStr(d)];
     if(h&&h.withinBudget)streak++;
     else break;
   }
@@ -455,6 +456,25 @@ function getExerciseStreak(goal){
     else break;
   }
   return weeks;
+}
+
+// Training days in the current Mon-Sun week (including today if trained)
+function getWeekProgress(){
+  const hist=getHistory();
+  const trained={};hist.forEach(h=>{if(h.burned>0)trained[h.date]=true;});
+  const todayTrained=getBurned()>0;
+  const today=new Date();today.setHours(0,0,0,0);
+  const day=(today.getDay()+6)%7;
+  const wkStart=new Date(today);wkStart.setDate(today.getDate()-day);
+  let count=0;
+  for(let i=0;i<7;i++){
+    const d=new Date(wkStart);d.setDate(wkStart.getDate()+i);
+    if(d>today)break;
+    const ds=dateStr(d);
+    if(ds===dateStr(today)){if(todayTrained||trained[ds])count++;}
+    else if(trained[ds])count++;
+  }
+  return count;
 }
 
 // Resolve a theme id to an actual theme. "auto" follows the OS color scheme.
@@ -586,9 +606,9 @@ function applyTheme(th){
   const tt=el("type-toggle");if(tt)tt.style.borderColor=inpBorder;
   const bgs={fantasy:buildFantasyBg,space:buildSpaceBg,ocean:buildOceanBg,viking:buildVikingBg,light:buildLightBg};
   el("bg").innerHTML=bgs[th.id]();
-  el("main-title")&&(el("main-title").textContent=`${th.emoji} CALORIE QUEST`);
   el("hero-panel").style.background=th.panel;el("hero-panel").style.borderColor=th.border;
   const sr=el("streak-row");if(sr)sr.style.borderTopColor=th.border;
+  const wp=el("week-progress");if(wp)wp.style.borderTopColor=th.border;
   const sbn=el("streak-budget-num");if(sbn)sbn.style.color=th.primary;
   const sen=el("streak-ex-num");if(sen)sen.style.color=th.primary;
   ["exgoal-minus","exgoal-plus"].forEach(id=>{const b=el(id);if(b){b.style.borderColor=th.border;b.style.color=th.primary;b.style.background="transparent";}});
@@ -684,6 +704,23 @@ function renderMain(){
     el("net-calc").style.opacity="0.7";
   } else {
     el("net-calc").style.opacity="0.55";
+  }
+
+  // Week training progress (current Mon-Sun week vs goal)
+  const wkCount=getWeekProgress();
+  const wkGoal=state.exerciseGoal;
+  const wpDots=el("week-progress-dots"),wpLabel=el("week-progress-label");
+  if(wpDots){
+    const th2=resolveTheme(state.themeId);
+    let dots="";
+    for(let i=0;i<wkGoal;i++){
+      dots+=i<wkCount?`<span style="color:${th2.primary};">●</span>`:`<span style="opacity:0.25;">○</span>`;
+    }
+    // Extra trained days beyond goal shown as bonus
+    for(let i=wkGoal;i<wkCount;i++)dots+=`<span style="color:${th2.accent};">●</span>`;
+    wpDots.innerHTML=dots;
+    if(wkCount>=wkGoal)wpLabel.textContent=`${wkCount} av ${wkGoal} – ukemål nådd!`;
+    else wpLabel.textContent=`${wkCount} av ${wkGoal} treningsdager denne uka`;
   }
 
   // Streaks in hero panel
@@ -837,7 +874,7 @@ async function callAI(promptText){
     const data=await res.json();
     return data.content.map(b=>b.text||"").join("").trim();
   } else {
-    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${key}`;
     const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:promptText}]}],generationConfig:{maxOutputTokens:3000,temperature:0.7}})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`HTTP ${res.status}`);}
     const data=await res.json();
@@ -878,6 +915,14 @@ function buildCoachPrompt(){
   if(bStreak>=2)streakTxt+=`Brukeren har holdt budsjettet ${bStreak} dager på rad. `;
   if(eStreak>=1)streakTxt+=`Brukeren har nådd treningsmålet (${state.exerciseGoal} dager/uke) ${eStreak} ${eStreak===1?"uke":"uker"} på rad. `;
   if(!streakTxt)streakTxt="Ingen aktive streaks akkurat nå.";
+  // Week progress toward training goal
+  const wkCount=getWeekProgress();
+  const wkRemain=Math.max(0,state.exerciseGoal-wkCount);
+  const dow=new Date().getDay(); // 0=Sun
+  const daysLeftInWeek=dow===0?1:(8-dow); // days incl today until Sunday
+  let weekTxt=`Denne uka (man-søn): trent ${wkCount} av ${state.exerciseGoal} dager (mål). `;
+  if(wkRemain>0)weekTxt+=`Mangler ${wkRemain} treningsdag${wkRemain>1?"er":""}, ${daysLeftInWeek} dag${daysLeftInWeek>1?"er":""} igjen av uka. `;
+  else weekTxt+="Ukemålet er nådd! ";
   let profileTxt="";
   if(p.age)profileTxt+=`Alder: ${p.age}. `;
   if(p.gender)profileTxt+=`Kjønn: ${p.gender}. `;
@@ -894,7 +939,7 @@ function buildCoachPrompt(){
   return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig melding på norsk i TRE avsnitt, skilt med linjeskift. ${lenSpec.para}
 1) STATUS: en vennlig oppsummering av hvor brukeren ligger an akkurat nå (det er ${tod}).
 2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene. Hvis brukeren har en aktiv streak (se nedenfor), feire den gjerne – spesielt runde tall eller lange streaks.
-3) TIPS: ett konkret råd for resten av dagen. Hvis det er kalorier igjen, foreslå et passende måltid. Motiver gjerne også til fysisk aktivitet på en lavterskel, lystbetont måte.
+3) TIPS: ett konkret råd for resten av dagen. Hvis det er kalorier igjen, foreslå et passende måltid. Motiver gjerne også til fysisk aktivitet på en lavterskel, lystbetont måte. Hvis brukeren er nær ukemålet for trening (f.eks. mangler bare én økt), oppmuntre konkret til å fullføre det – spesielt sent i uka.
 
 ${lenSpec.total} Vær positiv og varm, ALDRI streng eller skambelagt. Ingen medisinske råd, ingen oppfordring til ekstrem restriksjon eller overtrening. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i tre avsnitt.
 
@@ -902,6 +947,7 @@ Tid på døgnet: ${tod}.
 Profil: ${profileTxt}
 Trend: ${trendTxt}
 Streaks: ${streakTxt}
+Ukestatus trening: ${weekTxt}
 Dagens budsjett: ${state.budget} kcal.
 Spist i dag: ${foods}.
 Trening i dag: ${ex}.
@@ -963,8 +1009,12 @@ async function analyzeWithAI(){
   const eb=el("error-box");if(eb){eb.style.display="none";eb.textContent="";}
   try{
     const prompt=state.addType==="food"
-      ?`Du er en ernæringsekspert som estimerer kalorier. Anta ÉN normal, vanlig porsjon med mindre annet er oppgitt. Vær realistisk og moderat – ikke overvurder. Tenk på typiske porsjonsstørrelser slik en vanlig person spiser. Svar med KUN et JSON-objekt, ingen forklaring, ingen markdown. Format: {"name":"<kort norsk navn>","calories":<heltall>}. Mat: ${name||"maten i bildet"}.`
-      :`Du er en treningsekspert som estimerer forbrente kalorier. Anta en person på ca. 75 kg med mindre annet er oppgitt. Vær realistisk og moderat. Svar med KUN et JSON-objekt, ingen forklaring, ingen markdown. Format: {"name":"<kort norsk navn>","calories":<heltall>}. Aktivitet: ${name||"aktiviteten i bildet"}.`;
+      ?`Du er en ernæringsekspert som estimerer kalorier. Gjør dette stegvis (internt, ikke i svaret):
+1. Identifiser matvarene${state.imageFile?" i bildet":""} og hovedingrediensene.
+2. Anslå porsjonsstørrelsen i gram – bruk visuelle holdepunkter som tallerkenstørrelse, bestikk eller emballasje hvis bilde. Anta ÉN normal porsjon slik en vanlig person spiser, med mindre annet er oppgitt.
+3. Beregn kalorier ut fra matvare og porsjonsstørrelse. Vær realistisk og moderat – ikke overvurder.
+${state.profile.weight?`Brukeren veier ${state.profile.weight} kg. `:""}Svar med KUN et JSON-objekt, ingen forklaring, ingen markdown. Format: {"name":"<kort norsk navn>","calories":<heltall>}. Mat: ${name||"maten i bildet"}.`
+      :`Du er en treningsekspert som estimerer forbrente kalorier. Anta en person på ${state.profile.weight?state.profile.weight:"ca. 75"} kg med mindre annet er oppgitt. Vær realistisk og moderat. Svar med KUN et JSON-objekt, ingen forklaring, ingen markdown. Format: {"name":"<kort norsk navn>","calories":<heltall>}. Aktivitet: ${name||"aktiviteten i bildet"}.`;
 
     let parsed;
     if(state.provider==="claude"){
@@ -986,7 +1036,7 @@ async function analyzeWithAI(){
         parts.push({inline_data:{mime_type:state.imageFile.type,data:b64}});
       }
       parts.push({text:prompt});
-      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${key}`;
       let res;
       try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:800,temperature:0.1}})}); }
       catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
