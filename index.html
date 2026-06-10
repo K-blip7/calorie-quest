@@ -1,4 +1,4 @@
-<!-- Calorie Quest v6 -->
+<!-- Calorie Quest v68 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -314,7 +314,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v67</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v68</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -1011,8 +1011,8 @@ async function analyzeWithAI(){
     const prompt=state.addType==="food"
       ?`Du er en ernæringsekspert som estimerer kalorier. Gjør dette stegvis (internt, ikke i svaret):
 1. Identifiser matvarene${state.imageFile?" i bildet":""} og hovedingrediensene.
-2. Anslå porsjonsstørrelsen i gram – bruk visuelle holdepunkter som tallerkenstørrelse, bestikk eller emballasje hvis bilde. Anta ÉN normal porsjon slik en vanlig person spiser, med mindre annet er oppgitt.
-3. Beregn kalorier ut fra matvare og porsjonsstørrelse. Vær realistisk og moderat – ikke overvurder.
+2. Estimer mengden som FAKTISK vises i bildet eller beskrives i teksten – tell enheter hvis mulig (f.eks. én bit, tre kjeks, halv tallerken). Bruk visuelle holdepunkter som tallerkenstørrelse, bestikk eller emballasje. KUN hvis mengden er helt uklar: anta én normal porsjon.
+3. Beregn kalorier for den faktiske mengden. Vær så nøyaktig som mulig – verken overvurder eller undervurder.
 ${state.profile.weight?`Brukeren veier ${state.profile.weight} kg. `:""}Svar med KUN et JSON-objekt, ingen forklaring, ingen markdown. Format: {"name":"<kort norsk navn>","calories":<heltall>}. Mat: ${name||"maten i bildet"}.`
       :`Du er en treningsekspert som estimerer forbrente kalorier. Anta en person på ${state.profile.weight?state.profile.weight:"ca. 75"} kg med mindre annet er oppgitt. Vær realistisk og moderat. Svar med KUN et JSON-objekt, ingen forklaring, ingen markdown. Format: {"name":"<kort norsk navn>","calories":<heltall>}. Aktivitet: ${name||"aktiviteten i bildet"}.`;
 
@@ -1038,7 +1038,7 @@ ${state.profile.weight?`Brukeren veier ${state.profile.weight} kg. `:""}Svar med
       parts.push({text:prompt});
       const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${key}`;
       let res;
-      try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:800,temperature:0.1}})}); }
+      try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:3000,temperature:0.1}})}); }
       catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
       if(!res.ok){
         const err=await res.json().catch(()=>({}));
