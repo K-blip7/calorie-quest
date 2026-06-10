@@ -1,4 +1,4 @@
-<!-- Calorie Quest v68 -->
+<!-- Calorie Quest v69 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -314,7 +314,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v68</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v69</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -864,6 +864,32 @@ function setProvider(p){
   else{Object.assign(gp.style,{border:"3px solid #4285f4",background:"rgba(66,133,244,0.15)",color:"#93c5fd"});Object.assign(cp.style,{border:`3px solid ${inactive.border}`,background:inactive.bg,color:inactive.color});el("gemini-key-wrap").style.display="block";el("claude-key-wrap").style.display="none";}
 }
 
+// Shared Gemini call with automatic fallback: try 3.5-flash, fall back to 2.5-flash if overloaded
+async function geminiCall(key,contents,genConfig){
+  const models=["gemini-3.5-flash","gemini-2.5-flash"];
+  let lastErr;
+  for(const model of models){
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    let res;
+    try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents,generationConfig:genConfig})}); }
+    catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
+    if(res.status===503||res.status===500){ lastErr=new Error("Modellen er opptatt"); continue; }
+    if(!res.ok){
+      const e=await res.json().catch(()=>({}));
+      const msg=e?.error?.message||`HTTP ${res.status}`;
+      if(/overloaded|busy|unavailable/i.test(msg)){ lastErr=new Error(msg); continue; }
+      throw new Error(msg);
+    }
+    const data=await res.json();
+    if(data.error){
+      if(/overloaded|busy|unavailable/i.test(data.error.message||"")){ lastErr=new Error(data.error.message); continue; }
+      throw new Error(data.error.message);
+    }
+    return data;
+  }
+  throw lastErr||new Error("Modellen er opptatt – prøv igjen om litt");
+}
+
 async function callAI(promptText){
   // Shared text-only AI call, returns raw text or throws
   const key=state.provider==="claude"?state.apiKey:state.geminiKey;
@@ -874,10 +900,7 @@ async function callAI(promptText){
     const data=await res.json();
     return data.content.map(b=>b.text||"").join("").trim();
   } else {
-    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${key}`;
-    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:promptText}]}],generationConfig:{maxOutputTokens:3000,temperature:0.7}})});
-    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`HTTP ${res.status}`);}
-    const data=await res.json();
+    const data=await geminiCall(key,[{role:"user",parts:[{text:promptText}]}],{maxOutputTokens:3000,temperature:0.7});
     if(!data.candidates?.length)throw new Error("Tomt svar");
     const cand=data.candidates[0];
     const txt=(cand.content?.parts?.filter(p=>!p.thought).map(p=>p.text||"").join("")||"").trim();
@@ -1036,24 +1059,17 @@ ${state.profile.weight?`Brukeren veier ${state.profile.weight} kg. `:""}Svar med
         parts.push({inline_data:{mime_type:state.imageFile.type,data:b64}});
       }
       parts.push({text:prompt});
-      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${key}`;
-      let res;
-      try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{maxOutputTokens:3000,temperature:0.1}})}); }
-      catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
-      if(!res.ok){
-        const err=await res.json().catch(()=>({}));
-        const fullMsg=err?.error?.message||`HTTP ${res.status}`;
-        // Show full error in box for debugging
+      let data;
+      try{
+        data=await geminiCall(key,[{role:"user",parts}],{maxOutputTokens:3000,temperature:0.1});
+      }catch(gErr){
         const eb=el("error-box");
         eb.style.display="block";
-        eb.textContent=`[${res.status}] ${fullMsg}`;
-        if(res.status===400)throw new Error("Ugyldig API-nøkkel");
-        if(res.status===403)throw new Error("API-nøkkel mangler tilgang");
-        if(res.status===429)throw new Error("Kvote/rate-grense nådd");
-        throw new Error(fullMsg);
+        eb.textContent=gErr.message;
+        if(/API key not valid|Ugyldig/i.test(gErr.message))throw new Error("Ugyldig API-nøkkel");
+        if(/quota|rate/i.test(gErr.message))throw new Error("Kvote/rate-grense nådd");
+        throw gErr;
       }
-      const data=await res.json();
-      if(data.error){throw new Error(data.error.message);}
       if(!data.candidates?.length){throw new Error("Tomt svar fra Gemini");}
       const cand=data.candidates[0];
       const rawTxt=(cand.content?.parts?.filter(p=>!p.thought).map(p=>p.text||"").join("")||"").trim();
