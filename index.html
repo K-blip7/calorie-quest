@@ -1,4 +1,4 @@
-<!-- Calorie Quest v76 -->
+<!-- Calorie Quest v78 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -94,7 +94,7 @@
           <div style="display:flex;gap:18px;align-items:flex-start;">
           <div style="width:130px;height:170px;flex-shrink:0;position:relative;" class="hero-wrap">
             <div id="hero-glow" style="position:absolute;inset:0;"></div>
-            <svg id="hero-svg" viewBox="0 0 80 120" width="100%" height="100%"></svg>
+            <svg id="hero-svg" viewBox="0 -10 80 132" width="100%" height="100%"></svg>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;gap:16px;padding-top:4px;">
             <div>
@@ -316,7 +316,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v76</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v78</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -1020,7 +1020,7 @@ async function callAI(promptText){
     const data=await res.json();
     return data.content.map(b=>b.text||"").join("").trim();
   } else {
-    const data=await geminiCall(key,[{role:"user",parts:[{text:promptText}]}],{maxOutputTokens:3000,temperature:0.7});
+    const data=await geminiCall(key,[{role:"user",parts:[{text:promptText}]}],{maxOutputTokens:4000,temperature:0.7});
     if(!data.candidates?.length)throw new Error("Tomt svar");
     const cand=data.candidates[0];
     const txt=(cand.content?.parts?.filter(p=>!p.thought).map(p=>p.text||"").join("")||"").trim();
@@ -1075,10 +1075,10 @@ function buildCoachPrompt(){
   if(p.notes)profileTxt+=`Notater: ${p.notes}. `;
   if(!profileTxt)profileTxt="Ingen profilinfo oppgitt.";
   const lenSpec={
-    kort:{para:"Hvert avsnitt skal være ÉN kort setning.",total:"Hold HELE meldingen under 300 tegn totalt."},
-    medium:{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 520 tegn totalt."},
-    lang:{para:"Hvert avsnitt skal være 2-3 setninger med litt mer kontekst og begrunnelse.",total:"Hold HELE meldingen under 720 tegn totalt."}
-  }[state.coachLen]||{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 520 tegn totalt."};
+    kort:{para:"Hvert avsnitt skal være ÉN kort setning.",total:"Hold HELE meldingen under 280 tegn totalt."},
+    medium:{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 460 tegn totalt."},
+    lang:{para:"Hvert avsnitt skal være 2 setninger med litt mer kontekst.",total:"Hold HELE meldingen under 620 tegn totalt."}
+  }[state.coachLen]||{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 460 tegn totalt."};
   return `Du er en vennlig, men ærlig og direkte helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig melding på norsk i FIRE avsnitt, skilt med linjeskift. ${lenSpec.para}
 1) STATUS: en vennlig oppsummering av hvor brukeren ligger an akkurat nå (det er ${tod}).
 2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene. Hvis brukeren har en aktiv streak (se nedenfor), feire den gjerne – spesielt runde tall eller lange streaks.
