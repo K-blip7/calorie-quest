@@ -1,4 +1,4 @@
-<!-- Calorie Quest v75 -->
+<!-- Calorie Quest v76 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -316,7 +316,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v75</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v76</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -1075,16 +1075,17 @@ function buildCoachPrompt(){
   if(p.notes)profileTxt+=`Notater: ${p.notes}. `;
   if(!profileTxt)profileTxt="Ingen profilinfo oppgitt.";
   const lenSpec={
-    kort:{para:"Hvert avsnitt skal være ÉN kort setning.",total:"Hold HELE meldingen under 220 tegn totalt."},
-    medium:{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 400 tegn totalt."},
-    lang:{para:"Hvert avsnitt skal være 2-3 setninger med litt mer kontekst og begrunnelse.",total:"Hold HELE meldingen under 550 tegn totalt."}
-  }[state.coachLen]||{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 400 tegn totalt."};
-  return `Du er en vennlig, oppmuntrende helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig melding på norsk i TRE avsnitt, skilt med linjeskift. ${lenSpec.para}
+    kort:{para:"Hvert avsnitt skal være ÉN kort setning.",total:"Hold HELE meldingen under 300 tegn totalt."},
+    medium:{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 520 tegn totalt."},
+    lang:{para:"Hvert avsnitt skal være 2-3 setninger med litt mer kontekst og begrunnelse.",total:"Hold HELE meldingen under 720 tegn totalt."}
+  }[state.coachLen]||{para:"Hvert avsnitt skal være 1-2 setninger – hold det konsist.",total:"Hold HELE meldingen under 520 tegn totalt."};
+  return `Du er en vennlig, men ærlig og direkte helse-coach i en kaloriteller-app (en søt kanin-maskot). Skriv en personlig melding på norsk i FIRE avsnitt, skilt med linjeskift. ${lenSpec.para}
 1) STATUS: en vennlig oppsummering av hvor brukeren ligger an akkurat nå (det er ${tod}).
 2) ROS: fremhev noe brukeren gjør bra, gjerne basert på trenden de siste dagene. Hvis brukeren har en aktiv streak (se nedenfor), feire den gjerne – spesielt runde tall eller lange streaks.
-3) TIPS: ett konkret råd for resten av dagen. Hvis det er kalorier igjen, foreslå et passende måltid. Motiver gjerne også til fysisk aktivitet på en lavterskel, lystbetont måte. Hvis brukeren er nær ukemålet for trening (f.eks. mangler bare én økt), oppmuntre konkret til å fullføre det – spesielt sent i uka.
+3) KOSTHOLDSVURDERING: vurder ÆRLIG og DIREKTE hva brukeren faktisk har spist i dag ut fra matnavnene – er det balansert, nok protein og grønnsaker, eller tungt på snacks/sukker/raske karbohydrater? Vær rett på sak og konkret, ikke utvann budskapet. Gi tydelige råd om hva som kan forbedres. (Du ser kun matnavn og kalorier, så vurder ut fra det.)
+4) TIPS: ett konkret råd for resten av dagen. Hvis det er kalorier igjen, foreslå et passende måltid. Motiver gjerne også til fysisk aktivitet på en lavterskel, lystbetont måte. Hvis brukeren er nær ukemålet for trening (f.eks. mangler bare én økt), oppmuntre konkret til å fullføre det – spesielt sent i uka.
 
-${lenSpec.total} Vær positiv og varm, ALDRI streng eller skambelagt. Ingen medisinske råd, ingen oppfordring til ekstrem restriksjon eller overtrening. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i tre avsnitt.
+${lenSpec.total} Vær ærlig og direkte, men ALDRI skambelagt – ikke kall mat "syndig" eller "dårlig person"-aktig, og ikke oppfordre til ekstrem restriksjon eller overtrening. Fokuser på hva brukeren kan legge til eller justere. Ingen medisinske råd. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i fire avsnitt.
 
 Tid på døgnet: ${tod}.
 Profil: ${profileTxt}
@@ -1096,7 +1097,7 @@ Spist i dag: ${foods}.
 Trening i dag: ${ex}.
 Gjenstående: ${remaining} kcal.
 
-Skriv de tre avsnittene nå (kun teksten):`;
+Skriv de fire avsnittene nå (kun teksten):`;
 }
 
 async function generateCoachAdvice(force){
