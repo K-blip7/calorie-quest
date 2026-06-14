@@ -1,4 +1,4 @@
-<!-- Calorie Quest v80 -->
+<!-- Calorie Quest v81 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -316,7 +316,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v80</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v81</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -421,15 +421,13 @@ function dateStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart
 // Budget streak: consecutive days within budget, counting back from today.
 // Today counts if currently within budget. Yesterday and earlier come from history.
 function getBudgetStreak(){
+  // Counts only COMPLETED days from history. The ongoing day never affects the
+  // streak (neither adds nor removes) — today's result counts from tomorrow once
+  // it is archived. So the number is stable through the whole day.
   const hist=getHistory();
   const map={};hist.forEach(h=>{map[h.date]=h;});
   const today=new Date();
-  const todayWithin=(getUsed()-getBurned())<=state.budget;
-  // Option B: the ongoing day never lowers the streak.
-  // - If within budget right now, today adds to the streak.
-  // - If currently over, today simply doesn't count yet (dagen er ikke ferdig),
-  //   but the streak built through previous days still stands.
-  let streak=todayWithin?1:0;
+  let streak=0;
   for(let i=1;;i++){
     const d=new Date(today);d.setDate(today.getDate()-i);
     const h=map[dateStr(d)];
