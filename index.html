@@ -1,4 +1,4 @@
-<!-- Calorie Quest v78 -->
+<!-- Calorie Quest v80 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -316,7 +316,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v78</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v80</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -423,12 +423,13 @@ function dateStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart
 function getBudgetStreak(){
   const hist=getHistory();
   const map={};hist.forEach(h=>{map[h.date]=h;});
-  let streak=0;
   const today=new Date();
-  // Today counts if within budget right now; if over, today simply doesn't count
-  // (the streak from previous days still shows until the day is finalized)
   const todayWithin=(getUsed()-getBurned())<=state.budget;
-  if(todayWithin)streak++;
+  // Option B: the ongoing day never lowers the streak.
+  // - If within budget right now, today adds to the streak.
+  // - If currently over, today simply doesn't count yet (dagen er ikke ferdig),
+  //   but the streak built through previous days still stands.
+  let streak=todayWithin?1:0;
   for(let i=1;;i++){
     const d=new Date(today);d.setDate(today.getDate()-i);
     const h=map[dateStr(d)];
@@ -601,9 +602,10 @@ function heroSVG(mood,th,questsDone,trainedToday){
           <circle cx="33" cy="47" r="1.2" fill="#fff"/><circle cx="49" cy="47" r="1.2" fill="#fff"/>
           <path d="M34 61 Q40 56 46 61" stroke="#8a6a70" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
   } else if(mood==="sad1"){
+    // Still within budget — keep a neutral (not sad) mouth; only ears show lower energy
     face=`<circle cx="32" cy="48" r="3.5" fill="#3a3a45"/><circle cx="48" cy="48" r="3.5" fill="#3a3a45"/>
           <circle cx="33" cy="47" r="1.2" fill="#fff"/><circle cx="49" cy="47" r="1.2" fill="#fff"/>
-          <path d="M35 60 Q40 57 45 60" stroke="#8a6a70" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+          <line x1="36" y1="59" x2="44" y2="59" stroke="#8a6a70" stroke-width="2" stroke-linecap="round"/>`;
   } else if(mood==="neutral"){
     face=`<circle cx="32" cy="48" r="3.5" fill="#3a3a45"/><circle cx="48" cy="48" r="3.5" fill="#3a3a45"/>
           <circle cx="33" cy="47" r="1.2" fill="#fff"/><circle cx="49" cy="47" r="1.2" fill="#fff"/>
@@ -747,8 +749,11 @@ function renderMain(){
   else if(pct>=40)carrots=3;
   else if(pct>=20)carrots=2;
   else carrots=1;
-  // 5-level mood matching carrot count: 5=very happy ... 0/1=very sad
-  const mood=["sad2","sad1","neutral","happy1","happy2"][Math.max(0,carrots-1)] || "sad2";
+  // Mood: ears/posture reflect energy level by carrots; mouth only turns sad when OVER budget.
+  // over budget (0 carrots) -> sad2 (sad mouth). 1 carrot -> sad1 (droopy ears, neutral mouth).
+  let mood;
+  if(remaining<=0)mood="sad2";
+  else mood=["sad1","sad1","neutral","happy1","happy2"][Math.max(0,carrots-1)]||"neutral";
   const questsDone=QUESTS.filter(q=>q.check(state.log,remaining)).length;
   const trainedToday=getBurned()>0;
   el("hero-svg").innerHTML=heroSVG(mood,th,questsDone,trainedToday);

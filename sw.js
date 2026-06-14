@@ -1,4 +1,4 @@
-const CACHE_NAME = "calorie-quest-v78";
+const CACHE_NAME = "calorie-quest-v80";
 
 self.addEventListener("install", e => { self.skipWaiting(); });
 
