@@ -1,7 +1,5 @@
-const CACHE_NAME = "calorie-quest-v81";
-
+const CACHE_NAME = "calorie-quest-v85";
 self.addEventListener("install", e => { self.skipWaiting(); });
-
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -9,7 +7,6 @@ self.addEventListener("activate", e => {
     ).then(() => self.clients.claim())
   );
 });
-
 self.addEventListener("fetch", e => {
   const url = e.request.url;
   if (!url.startsWith("http")) return;
@@ -39,7 +36,6 @@ self.addEventListener("fetch", e => {
     })
   );
 });
-
 self.addEventListener("message", e => {
   if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
 });
