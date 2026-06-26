@@ -1,4 +1,4 @@
-<!-- Calorie Quest v85 -->
+<!-- Calorie Quest v86 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -328,7 +328,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v85</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v86</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -857,7 +857,7 @@ function renderMain(){
       chip.textContent=`+ ${item.name} (${item.calories})`;
       chip.addEventListener("click",()=>{
         state.log.push({id:Date.now(),name:item.name,calories:item.calories,type:"food"});
-        saveDay();renderMain();showToast("✓ LAGT TIL!");generateCoachAdvice(true);
+        saveDay();renderMain();showToast("✓ LAGT TIL!");maybeRefreshCoachOnLog();
       });
       qlist.appendChild(chip);
     });
@@ -931,7 +931,7 @@ function renderLog(){
     card.innerHTML=`<div style="width:48px;height:48px;flex-shrink:0;background:${btn.bg};border:3px solid ${btn.border};display:flex;align-items:center;justify-content:center;font-size:24px;">${icon}</div><div style="flex:1;"><div style="font-size:15px;margin-bottom:6px;line-height:1.5;color:${th.text};">${entry.name}</div><div style="font-size:18px;font-weight:700;color:${calColor};text-shadow:0 0 8px ${calColor}60;">${sign}${entry.calories} kcal</div></div><div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;"><button class="btn edit-btn" data-id="${entry.id}" style="width:44px;height:44px;font-size:18px;background:${th.panel};border:2px solid ${th.primary}60;color:${th.primary};display:flex;align-items:center;justify-content:center;">✏️</button><button class="btn del-btn" data-id="${entry.id}" style="width:44px;height:44px;font-size:18px;background:${th.panel};border:2px solid ${th.danger}60;color:${th.danger};display:flex;align-items:center;justify-content:center;">🗑</button></div>`;
     list.appendChild(card);
   });
-  list.querySelectorAll(".del-btn").forEach(b=>b.addEventListener("click",()=>{state.log=state.log.filter(e=>e.id!==parseInt(b.dataset.id));saveDay();renderLog();renderMain();generateCoachAdvice(true);}));
+  list.querySelectorAll(".del-btn").forEach(b=>b.addEventListener("click",()=>{state.log=state.log.filter(e=>e.id!==parseInt(b.dataset.id));saveDay();renderLog();renderMain();maybeRefreshCoachOnLog();}));
   list.querySelectorAll(".edit-btn").forEach(b=>b.addEventListener("click",()=>{const entry=state.log.find(e=>e.id===parseInt(b.dataset.id));if(entry)openEditModal(entry);}));
 }
 
@@ -967,7 +967,7 @@ function openEditModal(entry){
   document.body.appendChild(modal);
   const ec=document.getElementById("edit-cal");ec.addEventListener("focus",()=>ec.select());ec.addEventListener("input",()=>{ec.value=ec.value.replace(/[^0-9]/g,"");});
   document.getElementById("edit-cancel").addEventListener("click",()=>modal.remove());
-  document.getElementById("edit-save").addEventListener("click",()=>{const n=document.getElementById("edit-name").value.trim(),c=parseInt(document.getElementById("edit-cal").value)||0;if(!n)return;state.log=state.log.map(e=>e.id===entry.id?{...e,name:n,calories:c}:e);saveDay();renderLog();renderMain();modal.remove();showToast("✓ LAGRET!");generateCoachAdvice(true);});
+  document.getElementById("edit-save").addEventListener("click",()=>{const n=document.getElementById("edit-name").value.trim(),c=parseInt(document.getElementById("edit-cal").value)||0;if(!n)return;state.log=state.log.map(e=>e.id===entry.id?{...e,name:n,calories:c}:e);saveDay();renderLog();renderMain();modal.remove();showToast("✓ LAGRET!");maybeRefreshCoachOnLog();});
   modal.addEventListener("click",e=>{if(e.target===modal)modal.remove();});
 }
 
@@ -1147,6 +1147,22 @@ Trening i dag: ${ex}.
 Gjenstående: ${remaining} kcal.
 
 Skriv meldingen nå (kun selve teksten):`;
+}
+
+// Refresh coach after logging, but at most once per 30 min to save API calls.
+// Records the timestamp only when an actual refresh is triggered.
+function maybeRefreshCoachOnLog(){
+  const key=state.provider==="claude"?state.apiKey:state.geminiKey;
+  if(!key)return;
+  const last=load("cq_coachlogts",0);
+  const now=Date.now();
+  const THIRTY_MIN=30*60*1000;
+  if(now-last>=THIRTY_MIN){
+    save("cq_coachlogts",now);
+    generateCoachAdvice(true);
+  }
+  // else: within 30 min of the last log-triggered refresh — skip to save API calls.
+  // The cached advice stays; user can still force a fresh one with the 🔄 button.
 }
 
 async function generateCoachAdvice(force){
@@ -1348,7 +1364,7 @@ function init(){
   el("file-input-camera").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;el("add-name").value="";el("add-cal").value="";const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);e.target.value="";});
   el("btn-remove-img").addEventListener("click",()=>{state.imageFile=null;el("img-preview-wrap").style.display="none";el("file-input").value="";updateAddConfirmBtn();});
   el("btn-analyze").addEventListener("click",analyzeWithAI);
-  el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");generateCoachAdvice(true);});
+  el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");maybeRefreshCoachOnLog();});
   el("settings-budget").addEventListener("focus",e=>e.target.select());
   el("settings-budget").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
   el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;state.profile.age=el("settings-age").value.trim();state.profile.weight=el("settings-weight").value.trim();state.profile.notes=el("settings-notes").value.trim();const ci=el("settings-coachinstr").value.trim();state.coachInstructions=ci||DEFAULT_COACH_INSTRUCTIONS;save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);save("cq_profile",state.profile);save("cq_coachlen",state.coachLen);save("cq_exercisegoal",state.exerciseGoal);save("cq_coachinstr",state.coachInstructions);save("cq_coach",null);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
