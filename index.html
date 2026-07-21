@@ -1,4 +1,4 @@
-<!-- Calorie Quest v86 -->
+<!-- Calorie Quest v88 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -320,15 +320,10 @@
           </div>
           <div style="font-size:12px;margin-top:12px;opacity:0.35;line-height:1.6;">Nøkler lagres kun lokalt på denne enheten.</div>
         </div>
-        <!-- Streak (if active) -->
-        <div id="streak-card" class="panel" style="padding:20px;border:3px solid;display:none;">
-          <div style="font-size:16px;letter-spacing:1px;margin-bottom:10px;opacity:0.5;">STREAK</div>
-          <div id="streak-info" style="font-size:20px;color:#f97316;font-weight:700;"></div>
-        </div>
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v86</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v88</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -370,7 +365,7 @@ const DEFAULT_COACH_INSTRUCTIONS=`Du er en vennlig, men ærlig og direkte helse-
 
 Vær ærlig og direkte, men ALDRI skambelagt – ikke kall mat "syndig" eller "dårlig person"-aktig, og ikke oppfordre til ekstrem restriksjon eller overtrening. Fokuser på hva brukeren kan legge til eller justere. Ingen medisinske råd. Ikke bruk markdown, overskrifter, nummerering eller emojis – bare ren tekst i fire avsnitt.`;
 
-let state = { themeId:"auto", budget:2000, log:[], streak:0, screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null, profile:{age:"",weight:"",gender:"",goal:"",activity:"",notes:""}, coachText:"", coachLoading:false, coachLen:"medium", exerciseGoal:3, coachInstructions:DEFAULT_COACH_INSTRUCTIONS };
+let state = { themeId:"auto", budget:2000, log:[], screen:"main", addType:"food", apiKey:"", geminiKey:"", provider:"claude", imageFile:null, profile:{age:"",weight:"",gender:"",goal:"",activity:"",notes:""}, coachText:"", coachLoading:false, coachLen:"medium", exerciseGoal:3, coachInstructions:DEFAULT_COACH_INSTRUCTIONS };
 
 const THEMES = {
   fantasy:{id:"fantasy",name:"Eventyrrike",emoji:"🏰",primary:"#ffd700",secondary:"#a855f7",accent:"#00ff9d",danger:"#ef4444",bg:"#2a1f4a",panel:"#3d2d66dd",border:"#6d4baf",text:"#f3e8ff",subtext:"#9d7aed",hpColor:p=>p>50?"#ef4444":p>20?"#f97316":"#dc2626",hpLabel:"❤️ HP",foodLabel:"🍖 SPIST",exLabel:"⚔️ BRENT",btnFood:{bg:"linear-gradient(135deg,#1e1040,#2d1b69)",border:"#7c3aed",color:"#c4b5fd"},btnEx:{bg:"linear-gradient(135deg,#1a0a00,#3b1500)",border:"#c2410c",color:"#fdba74"},btnLog:{bg:"linear-gradient(135deg,#1a1200,#3a2a00)",border:"#b45309",color:"#fcd34d"}},
@@ -428,7 +423,6 @@ function loadAll(){
   state.coachLen=load("cq_coachlen","medium");
   state.coachInstructions=load("cq_coachinstr",DEFAULT_COACH_INSTRUCTIONS);
   state.exerciseGoal=load("cq_exercisegoal",3);
-  state.streak=load("cq_streak",0);
   const day=load("cq_day",null);
   // If stored day is from a previous date, archive its totals into history before resetting
   if(day&&day.date!==TODAY&&day.log&&day.log.length){
@@ -778,7 +772,7 @@ function applyTheme(th){
   document.querySelectorAll(".nav-btn").forEach(b=>{b.style.color="#8a8a9a";});
   const activeNav=el({main:"nav-home",add:"nav-add",log:"nav-log",coach:"nav-coach"}[state.screen]||"nav-home");
   if(activeNav)activeNav.style.color=th.primary;
-  ["budget-card","profile-card","api-card","theme-card","streak-card"].forEach(id=>{const c=el(id);if(c){c.style.background=th.panel;c.style.borderColor=th.border;}});
+  ["budget-card","profile-card","api-card","theme-card"].forEach(id=>{const c=el(id);if(c){c.style.background=th.panel;c.style.borderColor=th.border;}});
   el("ai-panel").style.background=th.panel;el("ai-panel").style.borderColor=th.secondary+"60";el("ai-panel").querySelector("div").style.color=th.secondary;
   el("btn-analyze").style.borderColor=th.secondary;el("btn-analyze").style.color=th.secondary;el("btn-analyze").style.background=th.secondary+"22";
 }
@@ -913,7 +907,8 @@ function renderMain(){
   // Streak shown on the home settings gear (🔥 if active)
   const sg=el("btn-settings");
   if(sg){
-    if(state.streak>0){sg.textContent="🔥";sg.title=`${state.streak} dager på rad`;}
+    const gearStreak=getBudgetStreak();
+    if(gearStreak>0){sg.textContent="🔥";sg.title=`${gearStreak} dager på rad`;}
     else{sg.textContent="⚙";sg.title="Innstillinger";}
   }
   el("nav-log-label").textContent=`LOGG${state.log.length?` (${state.log.length})`:""}`;
@@ -1035,12 +1030,17 @@ function setProvider(p){
 // Shared Gemini call with automatic fallback. Collects per-model status for diagnostics.
 // Pass `models` to control the order tried (cheapest-first vs best-first).
 async function geminiCall(key,contents,genConfig,models){
-  models=models||["gemini-3.5-flash","gemini-2.5-flash","gemini-2.5-flash-lite"];
+  models=models||["gemini-3.5-flash","gemini-3.6-flash","gemini-3.1-flash-lite"];
   const attempts=[];
   for(const model of models){
     const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    // Gemini 3.6+ rejects the older sampling parameters (temperature/top_p/top_k)
+    let cfg=genConfig;
+    if(/^gemini-3\.6/.test(model)&&cfg){
+      cfg={...cfg};delete cfg.temperature;delete cfg.topP;delete cfg.topK;
+    }
     let res;
-    try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents,generationConfig:genConfig})}); }
+    try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents,generationConfig:cfg})}); }
     catch(fetchErr){ throw new Error("Nettverksfeil – sjekk internettforbindelsen"); }
     if(res.ok){
       const data=await res.json();
@@ -1072,7 +1072,7 @@ async function callAI(promptText){
     const data=await res.json();
     return data.content.map(b=>b.text||"").join("").trim();
   } else {
-    const data=await geminiCall(key,[{role:"user",parts:[{text:promptText}]}],{maxOutputTokens:4000,temperature:0.7},["gemini-2.5-flash-lite","gemini-2.5-flash","gemini-3.5-flash"]);
+    const data=await geminiCall(key,[{role:"user",parts:[{text:promptText}]}],{maxOutputTokens:4000,temperature:0.7},["gemini-3.1-flash-lite","gemini-3.5-flash","gemini-3.6-flash"]);
     if(!data.candidates?.length)throw new Error("Tomt svar");
     const cand=data.candidates[0];
     const txt=(cand.content?.parts?.filter(p=>!p.thought).map(p=>p.text||"").join("")||"").trim();
@@ -1247,7 +1247,7 @@ ${state.profile.weight?`Brukeren veier ${state.profile.weight} kg. `:""}Svar med
       parts.push({text:prompt});
       let data;
       try{
-        data=await geminiCall(key,[{role:"user",parts}],{maxOutputTokens:3000,temperature:0.1},["gemini-2.5-flash","gemini-3.5-flash","gemini-2.5-flash-lite"]);
+        data=await geminiCall(key,[{role:"user",parts}],{maxOutputTokens:3000,temperature:0.1},["gemini-3.5-flash","gemini-3.6-flash","gemini-3.1-flash-lite"]);
       }catch(gErr){
         const eb=el("error-box");
         eb.style.display="block";
@@ -1352,7 +1352,6 @@ function init(){
   el("exgoal-minus").addEventListener("click",()=>{if(state.exerciseGoal>1){state.exerciseGoal--;renderExGoal();}});
   el("exgoal-plus").addEventListener("click",()=>{if(state.exerciseGoal<7){state.exerciseGoal++;renderExGoal();}});
   renderExGoal();
-  if(state.streak>0){el("streak-card").style.display="block";el("streak-info").textContent=`🔥 ${state.streak} dager på rad`;}
   // Coach refresh button
   el("btn-coach-refresh").addEventListener("click",()=>generateCoachAdvice(true));
   el("add-name").addEventListener("input",updateAddConfirmBtn);
