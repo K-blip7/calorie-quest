@@ -1,4 +1,4 @@
-<!-- Calorie Quest v88 -->
+<!-- Calorie Quest v89 -->
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -78,6 +78,14 @@
     .bunny-hop{animation:bunnyHop 0.6s ease-out;}
     @keyframes carrotPop{0%{transform:translate(0,0) rotate(0deg) scale(0.4);opacity:0}20%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(1);opacity:0}}
     .pop-carrot{position:absolute;font-size:22px;pointer-events:none;animation:carrotPop 0.7s ease-out forwards;will-change:transform,opacity;z-index:5;}
+    @keyframes cheerIn{0%{opacity:0;transform:scale(0.6)}60%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+    @keyframes cheerOut{0%{opacity:1}100%{opacity:0;transform:scale(0.9)}}
+    @keyframes cheerBunnyJump{0%,100%{transform:translateY(0)}20%{transform:translateY(-26px) rotate(-5deg)}40%{transform:translateY(0)}55%{transform:translateY(-14px) rotate(4deg)}70%{transform:translateY(0)}82%{transform:translateY(-6px)}}
+    #cheer-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:300;pointer-events:none;}
+    .cheer-box{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;padding:30px 34px;border-radius:8px;animation:cheerIn 0.4s ease-out;}
+    .cheer-box.leaving{animation:cheerOut 0.35s ease-in forwards;}
+    .cheer-bunny{font-size:88px;line-height:1;animation:cheerBunnyJump 1.1s ease-in-out;}
+    .cheer-text{font-size:19px;font-weight:700;text-align:center;letter-spacing:0.5px;line-height:1.4;max-width:260px;}
   </style>
 </head>
 <body>
@@ -323,7 +331,7 @@
         <!-- Reset day (forslag A) -->
         <button class="btn" id="btn-reset-day" style="width:100%;padding:14px;font-size:14px;background:transparent;color:#ef4444;border:2px solid rgba(239,68,68,0.4);letter-spacing:1px;">🗑 NULLSTILL DAGENS LOGG</button>
         <!-- Version -->
-        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v88</div>
+        <div style="text-align:center;font-size:12px;opacity:0.3;letter-spacing:1px;padding:4px 0 8px;">Calorie Quest v89</div>
       </div>
       <div style="padding:12px;border-top:2px solid #1a1a3a;flex-shrink:0;">
         <button class="btn" id="btn-save-settings" style="width:100%;padding:14px;font-size:15px;color:#ccc;background:rgba(255,255,255,0.06);border:2px solid #333;letter-spacing:1px;">LAGRE</button>
@@ -384,6 +392,52 @@ const QUESTS = [
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 function load(k,d){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}}
 function el(id){return document.getElementById(id)}
+
+// Celebration overlay when the user logs exercise: jumping bunny + carrots + motivational text
+const CHEER_PHRASES=[
+  "Hopp, hopp! For en innsats! 🐰",
+  "Du spretter fremover – sterkt jobba! 💪",
+  "Raskere enn en kanin! Fantastisk økt! ⚡",
+  "Den gulroten har du fortjent! 🥕",
+  "Kaninen er stolt av deg! ✨",
+  "Sprett i beina og glød i pelsen – bra trent!",
+  "Ingen kaninsteg dette – kjempeøkt! 🏃",
+  "Hoppende bra jobba! 🎉"
+];
+function showExerciseCheer(){
+  // Avoid stacking if one is already showing
+  if(el("cheer-overlay"))return;
+  const th=resolveTheme(state.themeId);
+  const phrase=CHEER_PHRASES[Math.floor(Math.random()*CHEER_PHRASES.length)];
+  const ov=document.createElement("div");
+  ov.id="cheer-overlay";
+  const box=document.createElement("div");
+  box.className="cheer-box";
+  box.style.background=th.panel;
+  box.style.border=`3px solid ${th.primary}`;
+  box.style.boxShadow=`0 0 30px ${th.primary}50`;
+  box.innerHTML=`<div class="cheer-bunny">🐰</div><div class="cheer-text" style="color:${th.text};">${phrase}</div>`;
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  // Carrots pop out around the bunny
+  for(let i=0;i<6;i++){
+    const c=document.createElement("div");
+    c.className="pop-carrot";
+    c.textContent=i%2?"🥕":"✨";
+    const angle=(i/6)*Math.PI*2-Math.PI/2;
+    const dist=80+Math.random()*40;
+    c.style.setProperty("--dx",`${Math.cos(angle)*dist}px`);
+    c.style.setProperty("--dy",`${Math.sin(angle)*dist}px`);
+    c.style.setProperty("--rot",`${(Math.random()*160-80)|0}deg`);
+    c.style.left="50%";c.style.top="35%";
+    c.style.fontSize="26px";
+    box.appendChild(c);
+    setTimeout(()=>c.remove(),750);
+  }
+  // Leave after ~1.9s
+  setTimeout(()=>{box.classList.add("leaving");},1900);
+  setTimeout(()=>{ov.remove();},2250);
+}
 
 // Playful tap animation: bunny hops + carrots pop out. Works for both home hero and coach bunny.
 function playBunnyAnimation(bunnyEl,containerEl){
@@ -1363,7 +1417,7 @@ function init(){
   el("file-input-camera").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;state.imageFile=file;el("add-name").value="";el("add-cal").value="";const r=new FileReader();r.onload=ev=>{el("img-preview").src=ev.target.result;el("img-preview-wrap").style.display="block";updateAddConfirmBtn();};r.readAsDataURL(file);e.target.value="";});
   el("btn-remove-img").addEventListener("click",()=>{state.imageFile=null;el("img-preview-wrap").style.display="none";el("file-input").value="";updateAddConfirmBtn();});
   el("btn-analyze").addEventListener("click",analyzeWithAI);
-  el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");maybeRefreshCoachOnLog();});
+  el("btn-add-confirm").addEventListener("click",()=>{const name=el("add-name").value.trim(),cal=parseInt(el("add-cal").value)||0;if(!name||!cal)return;state.log.push({id:Date.now(),name,calories:cal,type:state.addType});saveDay();renderMain();el("add-name").value="";el("add-cal").value="";el("img-preview-wrap").style.display="none";el("file-input").value="";state.imageFile=null;updateAddConfirmBtn();el("nav-log-label").textContent=`LOGG (${state.log.length})`;showToast(state.addType==="exercise"?"⚡ TRENING LOGGET!":"✓ MAT LOGGET!");if(state.addType==="exercise")showExerciseCheer();maybeRefreshCoachOnLog();});
   el("settings-budget").addEventListener("focus",e=>e.target.select());
   el("settings-budget").addEventListener("input",e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"");});
   el("btn-save-settings").addEventListener("click",()=>{const nb=parseInt(el("settings-budget").value)||2000,nk=el("settings-api").value.trim(),gk=el("settings-gemini").value.trim();state.budget=nb;state.apiKey=nk;state.geminiKey=gk;state.profile.age=el("settings-age").value.trim();state.profile.weight=el("settings-weight").value.trim();state.profile.notes=el("settings-notes").value.trim();const ci=el("settings-coachinstr").value.trim();state.coachInstructions=ci||DEFAULT_COACH_INSTRUCTIONS;save("cq_budget",nb);save("cq_apikey",nk);save("cq_geminikey",gk);save("cq_provider",state.provider);save("cq_theme",state.themeId);save("cq_profile",state.profile);save("cq_coachlen",state.coachLen);save("cq_exercisegoal",state.exerciseGoal);save("cq_coachinstr",state.coachInstructions);save("cq_coach",null);applyTheme(resolveTheme(state.themeId));renderMain();navTo("main");showToast("⚙ LAGRET!");});
